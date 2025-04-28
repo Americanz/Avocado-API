@@ -1,0 +1,23 @@
+# FastAPI і залежності
+fastapi==0.101.1
+uvicorn==0.23.2
+pydantic==2.1.1
+email-validator==2.0.0
+
+# Для роботи з базою даних
+sqlalchemy==2.0.20
+alembic==1.11.3
+
+# Для HTTP запитів
+httpx==0.24.1
+
+# Для обробки електронних листів
+python-dotenv==1.0.0
+
+# Для парсингу файлів
+pandas==2.0.3
+openpyxl==3.1.2
+
+# Для середовища розробки
+pytest==7.4.0
+pytest-asyncio==0.21.1

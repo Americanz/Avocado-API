@@ -1,0 +1,65 @@
+{
+    "roles": [
+        {
+            "name": "admin",
+            "description": "Адміністратор системи з повними правами",
+            "permissions": {
+                "user_create": true,
+                "user_read": true,
+                "user_update": true,
+                "user_delete": true,
+                "role_manage": true,
+                "system_settings": true
+            }
+        },
+        {
+            "name": "manager",
+            "description": "Менеджер з обмеженими правами адміністрування",
+            "permissions": {
+                "user_read": true,
+                "user_update": true,
+                "sales_manage": true,
+                "reports_view": true,
+                "system_settings": false
+            }
+        },
+        {
+            "name": "cashier",
+            "description": "Касир з правами на роботу з продажами",
+            "permissions": {
+                "user_read": true,
+                "profile_edit": true,
+                "sales_create": true,
+                "sales_read": true
+            }
+        },
+        {
+            "name": "user",
+            "description": "Звичайний користувач системи",
+            "permissions": {
+                "user_read": true,
+                "profile_edit": true
+            }
+        }
+    ],
+    "users": [
+        {
+            "email": "manager@avocado.com",
+            "username": "manager",
+            "full_name": "Store Manager",
+            "password": "manager123",
+            "is_active": true,
+            "is_superuser": false,
+            "roles": ["manager"]
+        },
+        {
+            "email": "cashier@avocado.com",
+            "username": "cashier",
+            "full_name": "Cashier",
+            "password": "cashier123",
+            "is_active": true,
+            "is_superuser": false,
+            "roles": ["cashier"]
+        }
+    ]
+}
