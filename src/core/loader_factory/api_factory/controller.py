@@ -1,10 +1,9 @@
 """
-Спрощений універсальний контролер для CRUD операцій.
+Універсальний контролер для CRUD операцій з API.
 """
 
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from uuid import UUID
-
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,8 +16,8 @@ from src.core.schemas.base import BaseResponseSchema
 ResponseSchemaType = TypeVar("ResponseSchemaType", bound=BaseResponseSchema)
 
 
-class GenericController(Generic[ModelType, CreateSchemaType, UpdateSchemaType, ResponseSchemaType]):
-    """Універсальний контролер для CRUD операцій."""
+class APIController(Generic[ModelType, CreateSchemaType, UpdateSchemaType, ResponseSchemaType]):
+    """Універсальний контролер для CRUD операцій з API."""
 
     def __init__(
         self,
@@ -54,7 +53,7 @@ class GenericController(Generic[ModelType, CreateSchemaType, UpdateSchemaType, R
             return self.db
         raise ValueError("База даних не налаштована, використовуйте with_db")
 
-    def with_db(self, db: AsyncSession) -> "GenericController":
+    def with_db(self, db: AsyncSession) -> "APIController":
         """Встановити сесію бази даних."""
         self.db = db
         return self
@@ -144,9 +143,9 @@ def create_controller(
     search_fields: Optional[List[str]] = None,
     default_order_by: Optional[List[str]] = None,
     select_related: Optional[List[str]] = None,
-) -> GenericController:
-    """Створити контролер."""
-    return GenericController(
+) -> APIController:
+    """Створити контролер API."""
+    return APIController(
         model=model,
         response_schema=response_schema,
         db=db,

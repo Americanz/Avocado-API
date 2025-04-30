@@ -11,10 +11,6 @@ from sqlalchemy.ext.declarative import declared_attr
 from src.core.database.connection import Base
 
 
-# Перевірка, чи використовується SQLite
-def is_sqlite(engine):
-    return engine.name == "sqlite"
-
 
 class BaseModel(Base):
     """
@@ -158,4 +154,4 @@ class BaseModel(Base):
         return f"<{self.__class__.__name__}(id={self.id})>"
 
 
-__all__ = ["BaseModel", "is_sqlite"]
+__all__ = ["BaseModel"]

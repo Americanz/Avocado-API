@@ -6,13 +6,13 @@ from datetime import date, datetime
 from typing import List, Optional, Tuple
 
 from sqlalchemy import and_, or_
-from src.core.models.loader.generic_controller import GenericController
+from src.core.loader_factory.api_factory.controller import APIController
 
 from .model import ProductSale
 from .schemas import ProductSaleResponse
 
 
-class ProductSaleController(GenericController):
+class ProductSaleController(APIController):
     """Контролер для спеціалізованих операцій з товарними позиціями."""
 
     async def get_sales_by_date(

@@ -18,7 +18,7 @@ sys.path.insert(0, BASE_DIR)  # Використовуємо insert заміст
 # Імпортуємо необхідні модулі для доступу до моделей та бази даних
 from src.config import settings
 from src.core.database.connection import Base
-from src.core.models.loader.registry import register_all_models
+from src.core.loader_factory.registry_factory import register_all_models
 
 
 

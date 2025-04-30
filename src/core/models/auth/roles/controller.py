@@ -6,13 +6,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.crud.crud_base import CRUDBase
-from src.core.models.loader.generic_controller import GenericController
+from src.core.loader_factory.api_factory.controller import APIController
 from .model import Role
 from .schemas import RoleCreate, RoleUpdate, RoleRead
 from src.core.models.auth.users import User
 
 
-class RoleController(GenericController[Role, RoleCreate, RoleUpdate, RoleRead]):
+class RoleController(APIController[Role, RoleCreate, RoleUpdate, RoleRead]):
     """Контролер для управління ролями."""
 
     def __init__(self, db: AsyncSession = None):

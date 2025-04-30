@@ -3,11 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import date
 from typing import Optional
 
-from src.core.models.loader.generic_routes import create_api_router
-from src.core.models.loader.generic_controller import create_controller
+from src.core.loader_factory.api_factory.routes import create_api_router
+from src.core.loader_factory.api_factory.controller import create_controller
 from src.core.database.connection import get_db
-from src.core.models.auth.users.routes import get_controller
-from src.core.schemas.base import PaginationParams
 from src.core.security.jwt import get_current_user, require_auth
 from src.core.schemas.responses import SuccessExtra
 
@@ -22,18 +20,16 @@ router = create_api_router(
     update_schema=ProductSaleUpdate,
     response_schema=ProductSaleResponse,
     prefix="/checkbox/productsales",
-    tags=["productsales"],
+    tags=["product sales"],
     auth_dependency=require_auth,
-    admin_dependency=require_auth,
-    include_endpoints=["list"],
+    include_endpoints=["list"],  # Включаємо тільки endpoint "list"
 )
 
 # Видаляємо дублювання маршруту GET "/" - використовуємо той, що вже створений через create_api_router
 
 # Створюємо окремий роутер для спеціалізованих ендпоінтів
 special_router = APIRouter(
-    prefix="/checkbox/productsales/special",
-    tags=["productsales"],
+    tags=["product sales"],
 )
 
 

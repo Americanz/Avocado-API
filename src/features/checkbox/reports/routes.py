@@ -2,9 +2,9 @@ from fastapi import Depends, File, Form, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
-from src.core.models.loader.generic_routes import create_api_router
-from src.core.models.loader.generic_controller import create_controller
-from src.core.security.jwt import get_current_user, require_auth
+from src.core.loader_factory.api_factory.routes import create_api_router
+from src.core.loader_factory.api_factory.controller import create_controller
+from src.core.security.jwt import require_auth
 from src.core.database.connection import get_db, get_sync_db
 from src.features.checkbox.service.file_parser import parse_report_file
 from src.features.checkbox.service.report_processor import (
@@ -57,7 +57,9 @@ router = create_api_router(
     tags=["reports"],
     auth_dependency=require_auth,
     admin_dependency=require_auth,
-    include_endpoints=["list"],
+    include_public_routes=True,  # Включити публічні маршрути (list, get)
+    include_protected_routes=False,  # Вимкнути захищені маршрути (create, update, delete)
+    include_admin_routes=False,  # Вимкнути адмін маршрути (bulk)
 )
 
 # # Тут можна додати додаткові спеціалізовані маршрути, наприклад:

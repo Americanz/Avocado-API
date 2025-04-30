@@ -12,6 +12,7 @@ from fastapi.security.utils import get_authorization_scheme_param
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 
 from src.config import settings
+from src.core.models.auth.tokens.controller import token_controller
 
 # OAuth2 scheme for token authentication
 API_SCOPES = {
@@ -19,6 +20,7 @@ API_SCOPES = {
     "manager": "Доступ до функцій керування",
     "user": "Базовий доступ користувача",
 }
+
 
 class CustomOAuth2PasswordBearerWithDataField(OAuth2):
     def __init__(self, tokenUrl: str, scopes=None, scheme_name=None):
@@ -43,11 +45,14 @@ class CustomOAuth2PasswordBearerWithDataField(OAuth2):
             )
         return param
 
+
 # Використання модифікованої схеми
 oauth2_scheme = CustomOAuth2PasswordBearerWithDataField(
-    tokenUrl="/api/v1/users/login",
-    scopes=API_SCOPES
+    tokenUrl="/api/v1/users/login", scopes=API_SCOPES
 )
+
+# API Key схема авторизації (импортируем из контроллера токенов)
+from src.core.models.auth.tokens.auth import api_key_scheme
 
 # Константи для типів доступу
 ACCESS_USER = "user"
@@ -193,6 +198,7 @@ def get_current_active_user(
 
 # Додаткові залежності для різних рівнів доступу
 
+
 def get_current_admin_user(
     current_user: Dict[str, Any] = Security(get_current_user, scopes=["admin"])
 ) -> Dict[str, Any]:
@@ -217,7 +223,9 @@ def get_current_admin_user(
 
 
 def get_current_manager_user(
-    current_user: Dict[str, Any] = Security(get_current_user, scopes=["manager", "admin"])
+    current_user: Dict[str, Any] = Security(
+        get_current_user, scopes=["manager", "admin"]
+    )
 ) -> Dict[str, Any]:
     """
     Get current active user with manager privileges.
@@ -248,3 +256,31 @@ def require_auth(
         Dict[str, Any]: Current user data
     """
     return current_user
+
+
+# Используем функции из модуля auth.tokens
+from src.core.models.auth.tokens.auth import (
+    get_current_user_by_api_key,
+    get_current_user_universal,
+    require_auth_universal,
+    get_admin_universal,
+)
+
+# Экспортируем функции для использования в других модулях
+__all__ = [
+    "create_access_token",
+    "decode_access_token",
+    "get_current_user",
+    "get_current_active_user",
+    "get_current_admin_user",
+    "get_current_manager_user",
+    "require_auth",
+    "get_current_user_by_api_key",
+    "get_current_user_universal",
+    "require_auth_universal",
+    "get_admin_universal",
+    "API_SCOPES",
+    "ACCESS_USER",
+    "ACCESS_MANAGER",
+    "ACCESS_ADMIN",
+]

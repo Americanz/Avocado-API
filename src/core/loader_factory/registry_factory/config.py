@@ -4,10 +4,11 @@
 
 # Базові модулі (завжди включені в міграції та API)
 BASE_MODULES = [
-    "src.core.models.logging",
     "src.core.models.auth.users",
     "src.core.models.auth.roles",
-    "src.core.models.auth.permissions",
+    "src.core.models.auth.otps",
+    "src.core.models.auth.tokens",
+    "src.core.models.logging",
 ]
 
 # Додаткові модулі, які використовуються в проекті

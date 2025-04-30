@@ -2,11 +2,11 @@
 Module loader for registering models and API routes with support for generic routes.
 
 This module simplifies the process of loading and registering application modules.
-When a new module is created, it needs to be registered here to be included in the application.
+When a new module is created, it needs to be registered in config.py to be included in the application.
 It now supports automatic creation of generic CRUD routes for models.
 """
 
-from typing import Dict, List
+from typing import List
 import importlib
 from fastapi import APIRouter, FastAPI
 
@@ -14,7 +14,10 @@ from fastapi import APIRouter, FastAPI
 from src.core.models.logging.providers import get_logger as get_global_logger
 
 # Імпортуємо конфігурацію модулів
-from src.core.loader.module_registry.config import BASE_MODULES, FEATURE_MODULES, ALL_MODULES
+from src.core.loader_factory.registry_factory.config import (
+    BASE_MODULES,
+    REGISTERED_MODULES,
+)
 
 # Отримуємо глобальний логер
 logger = get_global_logger()
@@ -24,37 +27,8 @@ if logger is None:
 
     logger = logging.getLogger(__name__)
 
-# Новий імпорт для генерації універсальних маршрутів
-from src.core.loader.api_factory.discovery import discover_and_create_generic_routes
-
-# Список модулів та їх API маршрутів
-# Формат: "module_path": "/api_prefix"
-REGISTERED_MODULES: Dict[str, str] = {
-    # Конвертуємо список модулів у словник з API префіксами
-}
-
-# Заповнюємо REGISTERED_MODULES на основі BASE_MODULES і FEATURE_MODULES
-for module in BASE_MODULES:
-    # Беремо останній сегмент шляху як API префікс
-    segments = module.split(".")
-    prefix = f"/{segments[-1]}"
-    REGISTERED_MODULES[module] = prefix
-
-for module in FEATURE_MODULES:
-    # Для функціональних модулів створюємо більш структуровані префікси
-    segments = module.split(".")
-    if len(segments) >= 3:
-        # Якщо шлях містить підкатегорію (напр. catalog.product)
-        feature_category = segments[-2] if len(segments) > 3 else ""
-        feature_name = segments[-1]
-        prefix = (
-            f"/{feature_category}/{feature_name}"
-            if feature_category
-            else f"/{feature_name}"
-        )
-    else:
-        prefix = f"/{segments[-1]}"
-    REGISTERED_MODULES[module] = prefix
+# Імпортуємо функцію для генерації універсальних маршрутів
+from src.core.loader_factory.api_factory.discovery import discover_and_create_generic_routes
 
 
 def get_base_modules() -> List[str]:
@@ -126,38 +100,36 @@ def load_module_routes(api_router: APIRouter, version_prefix: str = "") -> None:
                 # використовує лише автоматично згенеровані маршрути
                 logger.debug(
                     f"Модуль {module_path} не має файлу routes.py або атрибуту router",
-                    module="features_loader",
+                    module="module_loader",
                 )
 
         except Exception as e:
             failed_modules.append(f"{module_path}: {str(e)}")
             logger.warning(
                 f"Не вдалося завантажити маршрути з модуля {module_path}: {e}",
-                module="features_loader",
+                module="module_loader",
             )
 
     # Логування результатів стандартних маршрутів
     if successful_modules:
         logger.info(
             f"Завантажено маршрути з {len(successful_modules)} модулів",
-            module="features_loader",
+            module="module_loader",
         )
 
     if failed_modules:
         logger.warning(
             f"Не вдалося завантажити маршрути з {len(failed_modules)} модулів: {', '.join(failed_modules)}",
-            module="features_loader",
+            module="module_loader",
         )
 
     # Тепер додаємо автоматично згенеровані маршрути для моделей з підтримкою generic_routes
     try:
         logger.info(
-            "Запуск генерації універсальних маршрутів...", module="features_loader"
+            "Запуск генерації універсальних маршрутів...", module="module_loader"
         )
         discover_and_create_generic_routes(api_router)
-        logger.info(
-            "Універсальні маршрути успішно згенеровані", module="features_loader"
-        )
+        logger.info("Універсальні маршрути успішно згенеровані", module="module_loader")
     except Exception as e:
         logger.error(f"Помилка при генерації універсальних маршрутів: {e}")
 
@@ -205,36 +177,37 @@ def setup_app_modules(app: FastAPI, api_version_prefix: str = "") -> None:
     load_module_routes(api_router, api_version_prefix)
 
     # Додаємо маршрут перевірки здоров'я API
-    @api_router.get("/health")
+    @api_router.get("/health", tags=["system"])
     async def health_check():
         """Перевірка здоров'я API."""
         return {"status": "ok"}
 
-    # Додаємо API ендпоінт для перевірки статусу міграцій
-    @api_router.get("/migrations/status", tags=["System"])
-    async def check_migrations_status():
-        """Перевіряє статус міграцій."""
-        from src.core.database.migrations import check_pending_migrations
+    # # Додаємо API ендпоінт для перевірки статусу міграцій
+    # @api_router.get("/migrations/status", tags=["System"])
+    # async def check_migrations_status():
+    #     """Перевіряє статус міграцій."""
+    #     from src.core.database.migrations import check_pending_migrations
 
-        # Отримуємо інформацію про міграції
-        status = await check_pending_migrations()
+    #     # Отримуємо інформацію про міграції
+    #     status = await check_pending_migrations()
 
-        # Спрощуємо результат для API
-        return {
-            "current_revision": status["current_revision"],
-            "latest_revision": status["latest_revision"],
-            "is_up_to_date": status["is_up_to_date"],
-            "pending_count": status["pending_count"],
-            "pending_migrations": [
-                {"revision": m["revision"], "description": m["doc"]}
-                for m in status["pending_migrations"]
-            ],
-        }
+    #     # Спрощуємо результат для API
+    #     return {
+    #         "current_revision": status["current_revision"],
+    #         "latest_revision": status["latest_revision"],
+    #         "is_up_to_date": status["is_up_to_date"],
+    #         "pending_count": status["pending_count"],
+    #         "pending_migrations": [
+    #             {"revision": m["revision"], "description": m["doc"]}
+    #             for m in status["pending_migrations"]
+    #         ],
+    #     }
 
     # Додаємо головний API роутер до додатку
     app.include_router(api_router)
 
     # Логуємо результат
     logger.info(
-        f"Всі модулі успішно налаштовані, API доступний за {api_version_prefix}", module="features_loader"
+        f"Всі модулі успішно налаштовані, API доступний за {api_version_prefix}",
+        module="module_loader",
     )

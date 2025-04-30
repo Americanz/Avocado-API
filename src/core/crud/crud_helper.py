@@ -1,15 +1,14 @@
 """
 Utility functions for connecting CRUD operations with base response schemas.
 """
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Generic, List, Optional, Type, TypeVar, Union
 from uuid import UUID
 
-from fastapi import Depends
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.crud.crud_base import CRUDBase
-from src.core.database.connection import get_db
+
 from src.core.models.base_model import BaseModel as DBBaseModel
 from src.core.schemas.base import BaseResponseSchema, PaginatedResponse, PaginationParams
 

@@ -40,6 +40,11 @@ poetry shell
 ```bash
 alembic revision --autogenerate -m "add_tables"
 alembic upgrade head
+
+
+
+
+alembic stamp head
 ```
 
 6. Запустіть сервер для розробки:

@@ -1,8 +1,8 @@
 """
-Спрощені універсальні маршрути для API з кастомними відповідями.
+Універсальна фабрика API маршрутів для CRUD операцій.
 """
 
-from typing import List, Optional, Type, TypeVar
+from typing import List, Optional, Type, TypeVar, Set, Callable, Dict
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Path, Query, status
@@ -15,10 +15,10 @@ from src.core.schemas.base import (
     BaseResponseSchema,
     PaginationParams,
 )
-from src.core.security.jwt import get_current_user, require_auth
+from src.core.security.jwt import get_current_user, require_auth, get_current_admin_user
 from src.core.schemas.responses import Success, Fail, SuccessExtra
 
-from .сontroller import GenericController
+from .controller import APIController
 
 
 ModelType = TypeVar("ModelType", bound=DBBaseModel)
@@ -28,17 +28,21 @@ ResponseSchemaType = TypeVar("ResponseSchemaType", bound=BaseResponseSchema)
 
 
 def create_api_router(
-    controller: GenericController,
+    controller: APIController,
     create_schema: Type[CreateSchemaType],
     update_schema: Type[UpdateSchemaType],
     response_schema: Type[ResponseSchemaType],
     prefix: str,
     tags: List[str],
-    get_controller=None,
+    get_controller: Optional[Callable] = None,
     auth_dependency=None,
     admin_dependency=None,
-    include_endpoints=None,  # Новий параметр для вибору ендпоінтів
-):
+    include_public_routes: bool = True,
+    include_protected_routes: bool = True,
+    include_admin_routes: bool = True,
+    include_endpoints: Optional[List[str]] = None,
+    protected_endpoints: Optional[List[str]] = None,
+) -> APIRouter:
     """
     Створити API-маршрути для моделі з кастомними відповідями.
 
@@ -52,36 +56,56 @@ def create_api_router(
         get_controller: Функція для отримання контролера з залежностями
         auth_dependency: Залежність для авторизації
         admin_dependency: Залежність для адміністраторів
-        include_endpoints: Список ендпоінтів для включення (доступні: 'list', 'get', 'create', 'update', 'delete', 'bulk')
-                          Якщо None - включаються всі ендпоінти
+        include_public_routes: Включати публічні маршрути (список, отримання)
+        include_protected_routes: Включати захищені маршрути (створення, оновлення, видалення)
+        include_admin_routes: Включати адміністративні маршрути (масові операції)
+        include_endpoints: Список конкретних ендпоінтів, які потрібно включити ("list", "get", "create", "update", "delete", "bulk")
+                          Якщо вказано, цей параметр має пріоритет над include_*_routes параметрами
+        protected_endpoints: Список ендпоінтів, які потрібно захистити auth_dependency.
+                            За замовчуванням ["create", "update", "delete", "bulk"]
 
     Returns:
         APIRouter: Маршрутизатор з налаштованими маршрутами
     """
-    # Всі можливі ендпоінти для API
-    available_endpoints = {"list", "get", "create", "update", "delete", "bulk"}
+    # Визначаємо, які ендпоінти включати на основі параметрів
+    endpoints_to_include: Set[str] = set()
 
-    # Якщо не вказано, які ендпоінти включити, включаємо всі
-    if include_endpoints is None:
-        include_endpoints = available_endpoints
+    # Якщо передано конкретний список ендпоінтів, використовуємо його
+    if include_endpoints:
+        endpoints_to_include.update(include_endpoints)
     else:
-        # Перевіряємо, чи всі вказані ендпоінти є допустимими
-        invalid_endpoints = set(include_endpoints) - available_endpoints
-        if invalid_endpoints:
-            raise ValueError(f"Невідомі ендпоінти: {', '.join(invalid_endpoints)}")
+        # Інакше використовуємо групи ендпоінтів
+        if include_public_routes:
+            endpoints_to_include.update(["list", "get"])
 
-        # Конвертуємо в множину для швидкого пошуку
-        include_endpoints = set(include_endpoints)
+        if include_protected_routes:
+            endpoints_to_include.update(["create", "update", "delete"])
 
+        if include_admin_routes:
+            endpoints_to_include.update(["bulk"])
+
+    # Визначаємо, які ендпоінти повинні бути захищені
+    default_protected = ["list", "create", "update", "delete", "bulk"]
+    endpoints_to_protect = set(
+        protected_endpoints if protected_endpoints is not None else default_protected
+    )
+
+    # Перевіряємо, чи потрібно захищати маршрутизатор в цілому
+    need_router_protection = auth_dependency and any(
+        endpoint in endpoints_to_include and endpoint in endpoints_to_protect
+        for endpoint in endpoints_to_include
+    )
+
+    # Створюємо роутер
     router = APIRouter(
         prefix=prefix,
         tags=tags,
-        dependencies=[Depends(auth_dependency)] if auth_dependency else [],
+        dependencies=[Depends(auth_dependency)] if need_router_protection else [],
     )
 
     # Залежності для авторизації
     auth_dependency = auth_dependency or require_auth
-    admin_dependency = admin_dependency or auth_dependency
+    admin_dependency = admin_dependency or get_current_admin_user
 
     # Якщо передано функцію для отримання контролера, використовуємо її
     if get_controller is None:
@@ -90,9 +114,15 @@ def create_api_router(
             return controller.with_db(db)
 
     # Список всіх об'єктів
-    if "list" in include_endpoints:
+    if "list" in endpoints_to_include:
+        # Визначаємо, чи потрібна авторизація для list, якщо роутер не захищений глобально
+        list_dependencies = (
+            [Depends(auth_dependency)]
+            if not need_router_protection and "list" in endpoints_to_protect
+            else []
+        )
 
-        @router.get("/")
+        @router.get("/", dependencies=list_dependencies)
         async def list_items(
             pagination: PaginationParams = Depends(),
             search: Optional[str] = Query(None, description="Пошуковий запит"),
@@ -115,9 +145,15 @@ def create_api_router(
             )
 
     # Отримання об'єкта за ID
-    if "get" in include_endpoints:
+    if "get" in endpoints_to_include:
+        # Визначаємо, чи потрібна авторизація для get, якщо роутер не захищений глобально
+        get_dependencies = (
+            [Depends(auth_dependency)]
+            if not need_router_protection and "get" in endpoints_to_protect
+            else []
+        )
 
-        @router.get("/{item_id}")
+        @router.get("/{item_id}", dependencies=get_dependencies)
         async def get_item(
             item_id: UUID = Path(..., description="ID об'єкта"),
             controller=Depends(get_controller),
@@ -131,12 +167,19 @@ def create_api_router(
             return Success(data=response_item)
 
     # Створення об'єкта
-    if "create" in include_endpoints:
+    if "create" in endpoints_to_include:
+        # Для create не додаємо додаткові залежності, оскільки вони вже додані на рівні роутера
+        # або будуть додані через current_user у визначенні функції
 
         @router.post("/", status_code=status.HTTP_201_CREATED)
         async def create_item(
             item_data: CreateSchemaType,
             controller=Depends(get_controller),
+            current_user: dict = (
+                Depends(get_current_user)
+                if "create" in endpoints_to_protect and not need_router_protection
+                else None
+            ),
         ):
             """Створити новий об'єкт."""
             try:
@@ -147,14 +190,18 @@ def create_api_router(
                 return Fail(code="4000", msg=f"Помилка при створенні об'єкта: {str(e)}")
 
     # Оновлення об'єкта (захищений маршрут)
-    if "update" in include_endpoints:
+    if "update" in endpoints_to_include:
 
         @router.patch("/{item_id}")
         async def update_item(
             item_id: UUID = Path(..., description="ID об'єкта"),
             item_data: UpdateSchemaType = None,
             controller=Depends(get_controller),
-            current_user: dict = Depends(get_current_user),
+            current_user: dict = (
+                Depends(get_current_user)
+                if "update" in endpoints_to_protect or not need_router_protection
+                else Depends(lambda: None)
+            ),
         ):
             """Оновити об'єкт за ID."""
             item = await controller.update(item_id, item_data)
@@ -165,13 +212,17 @@ def create_api_router(
             return Success(data=response_item, msg="Об'єкт успішно оновлено")
 
     # Видалення об'єкта (захищений маршрут)
-    if "delete" in include_endpoints:
+    if "delete" in endpoints_to_include:
 
         @router.delete("/{item_id}")
         async def delete_item(
             item_id: UUID = Path(..., description="ID об'єкта"),
             controller=Depends(get_controller),
-            current_user: dict = Depends(get_current_user),
+            current_user: dict = (
+                Depends(get_current_user)
+                if "delete" in endpoints_to_protect or not need_router_protection
+                else Depends(lambda: None)
+            ),
         ):
             """Видалити об'єкт за ID."""
             success = await controller.delete(item_id)
@@ -181,7 +232,7 @@ def create_api_router(
             return Success(data=None, msg="Об'єкт успішно видалено")
 
     # Масове створення об'єктів (адміністративний маршрут)
-    if "bulk" in include_endpoints:
+    if "bulk" in endpoints_to_include:
 
         @router.post("/bulk", dependencies=[Depends(admin_dependency)])
         async def bulk_create_items(

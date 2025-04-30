@@ -23,6 +23,11 @@ class Settings(BaseSettings):
 
     # Базові налаштування додатку
     APP_NAME: str = os.getenv("APP_NAME", "Avocado")
+    APP_DESCRIPTION: str = os.getenv(
+        "APP_DESCRIPTION",
+        "Avocado is a web application for managing your tasks and projects.",
+    )
+    APP_VERSION: str = os.getenv("APP_VERSION", "1.0.0")
     API_PREFIX: str = os.getenv("API_PREFIX", "/api")
     DEBUG: bool = os.getenv("DEBUG", "True").lower() in ["true", "1"]
     LOAD_DEMO_DATA: bool = os.getenv("LOAD_DEMO_DATA", "False").lower() in ["true", "1"]
@@ -67,6 +72,12 @@ class Settings(BaseSettings):
         "true",
         "1",
     ]
+    ENABLE_EMAIL_NOTIFICATIONS: bool = os.getenv(
+        "ENABLE_EMAIL_NOTIFICATIONS", "False").lower() in [
+        "true",
+        "1",
+    ]
+
     OTP_EXPIRY_MINUTES: int = int(
         os.getenv("OTP_EXPIRY_MINUTES", "15")
     )  # OTP действителен 15 минут по умолчанию
@@ -76,6 +87,11 @@ class Settings(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_MINUTES: int = int(
         os.getenv("JWT_REFRESH_TOKEN_EXPIRE_MINUTES", "10080")
     )  # 7 days
+
+    # Telegram Bot settings
+    TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    TELEGRAM_AUTH_EXPIRY_MINUTES: int = int(os.getenv("TELEGRAM_AUTH_EXPIRY_MINUTES", "15"))
+    ENABLE_TELEGRAM_AUTH: bool = os.getenv("ENABLE_TELEGRAM_AUTH", "true").lower() == "true"
 
     # Налаштування CORS
     CORS_ORIGINS: List[str] = ["*"]  # Буде перезаписано з .env
@@ -124,7 +140,9 @@ class Settings(BaseSettings):
     LOG_FILE_ROTATION: str = os.getenv("LOG_FILE_ROTATION", "10 MB")
     LOG_FILE_RETENTION: int = int(os.getenv("LOG_FILE_RETENTION", "5"))
     LOG_MAX_FILE_SIZE: int = int(os.getenv("LOG_MAX_FILE_SIZE", "10"))  # MB
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")  # development, production
+    ENVIRONMENT: str = os.getenv(
+        "ENVIRONMENT", "development"
+    )  # development, production
 
     @model_validator(mode="after")
     def set_database_urls(self) -> "Settings":

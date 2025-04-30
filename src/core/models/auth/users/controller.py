@@ -26,10 +26,10 @@ from src.core.models.auth.users.schemas import (
 from src.core.models.auth.roles.model import Role
 
 # Додаємо імпорт GenericController
-from src.core.loader.api_factory.сontroller import GenericController
+from src.core.loader_factory.api_factory.controller import APIController
 
 
-class UserController(GenericController[User, UserCreate, UserUpdate, UserResponse]):
+class UserController(APIController[User, UserCreate, UserUpdate, UserResponse]):
     """Контролер для керування користувачами."""
 
     def __init__(

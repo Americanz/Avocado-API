@@ -15,7 +15,6 @@ class User(BaseModel):
     default_order_by = ["email"]
     select_related = ["role"]
 
-
     email = Column(String, unique=True, nullable=False, index=True)
     username = Column(String, unique=True, nullable=True, index=True)
     password = Column(String, nullable=False)
@@ -23,9 +22,13 @@ class User(BaseModel):
     last_name = Column(String, nullable=True)
     is_superuser = Column(Boolean, default=False, nullable=False)
 
-
     role_id = Column(String(36), ForeignKey("roles.id"), nullable=True)
     role = relationship("Role", back_populates="users")
+
+    # Связь з токенами
+    tokens = relationship(
+        "Token", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def __str__(self):
         return self.username or self.email  # Повертаємо email, якщо username порожній

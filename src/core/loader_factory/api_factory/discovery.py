@@ -1,8 +1,7 @@
 """
-Розширений завантажувач модулів з підтримкою генерації універсальних API маршрутів.
+Модуль виявлення та автоматичної генерації API маршрутів для моделей.
 
-Цей модуль надає можливість динамічно створювати CRUD маршрути для моделей
-використовуючи GenericController та GenericRouter.
+Цей модуль сканує зареєстровані моделі та створює для них стандартні CRUD API маршрути.
 """
 
 import importlib
@@ -10,20 +9,22 @@ import inspect
 from typing import Dict, List, Type, Optional, Any
 import logging
 
-
 from fastapi import APIRouter
 
 from src.core.models.base_model import BaseModel
-
 from src.core.schemas.base import BaseResponseSchema
 from src.core.security.jwt import require_auth, get_current_admin_user
 
-# Імпорт універсальних компонентів
-from src.core.loader.api_factory.сontroller import create_controller
-from src.core.loader.api_factory.routes import create_api_router
+# Імпорт універсальних компонентів API
+from src.core.loader_factory.api_factory.controller import create_controller
+from src.core.loader_factory.api_factory.routes import create_api_router
+
+# Імпорт конфігурації модулів
+from src.core.loader_factory.registry_factory.config import REGISTERED_MODULES
 
 # Логер
 from src.core.models.logging.providers import get_logger as get_global_logger
+
 logger = get_global_logger()
 
 if logger is None:
@@ -76,38 +77,42 @@ def discover_schemas_in_module(module_path: str) -> None:
         module = importlib.import_module(module_path)
 
         # Отримуємо назву моделі з шляху модуля
-        parts = module_path.split('.')
+        parts = module_path.split(".")
         if len(parts) > 0:
             # Отримуємо останню частину шляху і переводимо в CamelCase
-            model_name_parts = parts[-1].split('_')
-            model_name = ''.join(part.capitalize() for part in model_name_parts)
+            model_name_parts = parts[-1].split("_")
+            model_name = "".join(part.capitalize() for part in model_name_parts)
         else:
             model_name = "Unknown"
 
         # Знаходимо схеми
         for name, obj in inspect.getmembers(module):
-            if inspect.isclass(obj) and issubclass(obj, BaseResponseSchema) and obj != BaseResponseSchema:
-                if name.endswith('Response'):
-                    register_schema(model_name, 'response', obj)
-                elif name.endswith('Create'):
-                    register_schema(model_name, 'create', obj)
-                elif name.endswith('Update'):
-                    register_schema(model_name, 'update', obj)
+            if (
+                inspect.isclass(obj)
+                and issubclass(obj, BaseResponseSchema)
+                and obj != BaseResponseSchema
+            ):
+                if name.endswith("Response"):
+                    register_schema(model_name, "response", obj)
+                elif name.endswith("Create"):
+                    register_schema(model_name, "create", obj)
+                elif name.endswith("Update"):
+                    register_schema(model_name, "update", obj)
 
     except Exception as e:
         logger.error(f"Помилка при виявленні схем у модулі {module_path}: {e}")
 
 
-def create_generic_router_for_model(
+def create_api_router_for_model(
     model_class: Type[BaseModel],
     prefix: str,
     tags: List[str],
     auth_dependency=require_auth,
     admin_dependency=get_current_admin_user,
-    public_routes: bool = False
+    public_routes: bool = False,
 ) -> Optional[APIRouter]:
     """
-    Створює універсальний API маршрутизатор для моделі.
+    Створює API маршрутизатор для моделі.
 
     Args:
         model_class: Клас моделі
@@ -124,21 +129,23 @@ def create_generic_router_for_model(
 
     try:
         # Знаходимо схеми для моделі
-        response_schema = get_schema_for_model(model_name, 'response')
-        create_schema = get_schema_for_model(model_name, 'create')
-        update_schema = get_schema_for_model(model_name, 'update')
+        response_schema = get_schema_for_model(model_name, "response")
+        create_schema = get_schema_for_model(model_name, "create")
+        update_schema = get_schema_for_model(model_name, "update")
 
         if not all([response_schema, create_schema, update_schema]):
-            logger.warning(f"Не вдалося знайти всі необхідні схеми для моделі {model_name}")
+            logger.warning(
+                f"Не вдалося знайти всі необхідні схеми для моделі {model_name}"
+            )
             return None
 
         # Створюємо контролер
         controller = create_controller(
             model=model_class,
             response_schema=response_schema,
-            search_fields=getattr(model_class, 'search_fields', None),
-            default_order_by=getattr(model_class, 'default_order_by', None),
-            select_related=getattr(model_class, 'select_related', None),
+            search_fields=getattr(model_class, "search_fields", None),
+            default_order_by=getattr(model_class, "default_order_by", None),
+            select_related=getattr(model_class, "select_related", None),
         )
 
         # Визначаємо залежності маршрутів
@@ -154,13 +161,15 @@ def create_generic_router_for_model(
             tags=tags,
             auth_dependency=route_dependency,
             admin_dependency=admin_dependency,
-            # Визначаємо, які типи маршрутів включати
+            # Визначаємо типи маршрутів на основі public_routes
             include_public_routes=True,
             include_protected_routes=not public_routes,
             include_admin_routes=True,
         )
 
-        logger.info(f"Створено універсальний маршрутизатор для моделі {model_name} з префіксом {prefix}")
+        logger.info(
+            f"Створено API маршрутизатор для моделі {model_name} з префіксом {prefix}"
+        )
         return router
 
     except Exception as e:
@@ -170,13 +179,11 @@ def create_generic_router_for_model(
 
 def discover_and_create_generic_routes(api_router: APIRouter) -> None:
     """
-    Автоматично знаходить моделі, для яких можна створити універсальні маршрути.
+    Автоматично знаходить моделі, для яких можна створити API маршрути.
 
     Args:
-        api_router: Головний API маршрутизатор, до якого будуть додані нові маршрути
+        api_router: Головний API маршрутизатор
     """
-    from src.core.models.loader.features_loader import REGISTERED_MODULES
-
     # Спочатку виявляємо та реєструємо схеми в усіх модулях
     for module_path in REGISTERED_MODULES.keys():
         # Шукаємо схеми в модулі schemas.py в кожному зареєстрованому модулі
@@ -184,54 +191,58 @@ def discover_and_create_generic_routes(api_router: APIRouter) -> None:
         discover_schemas_in_module(schema_module_path)
 
     # Тепер створюємо маршрути для всіх моделей з повними схемами
+    from src.core.loader_factory.registry_factory.registry import get_all_models
+
     for model_name, model_class in get_all_models().items():
-        # Перевіряємо, чи є в моделі маркер використання універсальних маршрутів
-        if not hasattr(model_class, 'use_generic_routes') or not model_class.use_generic_routes:
+        # Перевіряємо, чи є в моделі маркер використання API маршрутів
+        if (
+            not hasattr(model_class, "use_generic_routes")
+            or not model_class.use_generic_routes
+        ):
             continue
 
         # Знаходимо схеми для моделі
-        if (get_schema_for_model(model_name, 'response') and
-            get_schema_for_model(model_name, 'create') and
-            get_schema_for_model(model_name, 'update')):
+        if (
+            get_schema_for_model(model_name, "response")
+            and get_schema_for_model(model_name, "create")
+            and get_schema_for_model(model_name, "update")
+        ):
 
             # Знаходимо API префікс для моделі
             prefix = None
             module_path = model_class.__module__
 
             # Шукаємо прямий модуль моделі в зареєстрованих
-            direct_module = '.'.join(module_path.split('.')[:-1])  # видаляємо ".model" з кінця
+            direct_module = ".".join(
+                module_path.split(".")[:-1]
+            )  # видаляємо ".model" з кінця
 
             for registered_module, api_prefix in REGISTERED_MODULES.items():
-                if direct_module == registered_module or module_path.startswith(registered_module):
+                if direct_module == registered_module or module_path.startswith(
+                    registered_module
+                ):
                     prefix = api_prefix
                     break
 
             if prefix:
                 # Визначаємо теги OpenAPI
-                tags = [prefix.strip('/').split('/')[-1]]
+                tags = [prefix.strip("/").split("/")[-1]]
 
                 # Визначаємо публічність маршрутів
-                public_routes = hasattr(model_class, 'public_routes') and model_class.public_routes
+                public_routes = (
+                    hasattr(model_class, "public_routes") and model_class.public_routes
+                )
 
                 # Створюємо та додаємо маршрутизатор
-                router = create_generic_router_for_model(
+                router = create_api_router_for_model(
                     model_class=model_class,
                     prefix=prefix,
                     tags=tags,
-                    public_routes=public_routes
+                    public_routes=public_routes,
                 )
 
                 if router:
                     api_router.include_router(router)
-                    logger.info(f"Додано універсальний маршрутизатор для {model_name} з префіксом {prefix}")
-
-
-def get_all_models() -> Dict[str, Type[BaseModel]]:
-    """
-    Отримує всі зареєстровані моделі.
-
-    Returns:
-        Dict[str, Type[BaseModel]]: Словник з назвами моделей та їх класами
-    """
-    from src.core.loader.module_registry.registry import get_all_models as get_registry_models
-    return get_registry_models()
+                    logger.info(
+                        f"Додано API маршрутизатор для {model_name} з префіксом {prefix}"
+                    )

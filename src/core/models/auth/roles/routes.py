@@ -8,9 +8,8 @@ from src.core.models.logging.providers import get_global_logger
 from src.core.models.logging.loguru_service import OptimizedLoguruService
 from src.core.database.connection import get_db
 from src.core.security.jwt import require_auth, get_current_admin_user, get_current_user
-from src.core.models.loader.generic_routes import create_api_router
-from src.core.models.loader.generic_controller import create_controller
-
+from src.core.loader_factory.api_factory.routes import create_api_router
+from src.core.loader_factory.api_factory.controller import create_controller
 from .model import Role
 from .schemas import (
     RoleCreate,

@@ -1,5 +1,5 @@
 """
-Контролер для модуля автентифікації та авторизації permissions.
+Контролер для модуля автентифікації за допомогою OTP.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -8,32 +8,33 @@ from typing import Optional, Dict, Any
 import pytz
 from sqlalchemy import select
 
-from src.core.models.auth.users.model import User
+# Add the missing import for database session
+from src.core.database.connection import AsyncSessionLocal
+
 from src.core.models.auth.users.controller import UserController
 from src.core.models.auth.users.schemas import UserCreate
 from src.core.models.auth.roles.controller import role_controller
 from src.core.schemas.responses import Success, Fail
-from src.core.database.connection import async_session_maker
+
 
 from src.config.settings import settings
 from src.core.models.logging.providers import get_global_logger
 
-from .model import OTP
-from .schemas import (
+from src.core.models.auth.otps.model import OTP
+from src.core.models.auth.otps.schemas import (
     CredentialsSchema,
-    JWTOut,
     JWTPayload,
     RequestOTPSchema,
     VerifyOTPSchema,
 )
-from .service import create_access_token, create_otp, verify_otp
+from src.core.models.auth.otps.service import create_access_token, create_otp, verify_otp
 
 # Отримуємо логер
 logger = get_global_logger()
 
 
-class PermissionsController:
-    """Контролер для управління автентифікацією та авторизацією."""
+class OTPController:
+    """Контролер для управління OTP автентифікацією."""
 
     def __init__(self):
         # Отримуємо екземпляр UserController
@@ -43,7 +44,7 @@ class PermissionsController:
         """Логування дій користувача"""
         logger.info(
             f"User action: {log_detail_type}",
-            module="auth.permissions",
+            module="auth.otp",
             data={"log_type": log_type, "by_user_id": by_user_id},
         )
 
@@ -71,7 +72,7 @@ class PermissionsController:
         otp = OTP(email=email, code=code, expires_at=expires_at, processed_at=None)
 
         # Зберігаємо OTP в базі даних через SQLAlchemy
-        async with async_session_maker() as session:
+        async with AsyncSessionLocal() as session:
             session.add(otp)
             await session.commit()
             await session.refresh(otp)
@@ -98,7 +99,7 @@ class PermissionsController:
         )
 
         # Виконання запиту через сесію
-        async with async_session_maker() as session:
+        async with AsyncSessionLocal() as session:
             result = await session.execute(query)
             otp = result.scalars().first()
 
@@ -107,7 +108,7 @@ class PermissionsController:
 
         return None
 
-    async def login(self, username: str, password: str) -> Dict[str, Any]:
+    async def login_token(self, username: str, password: str) -> Dict[str, Any]:
         """Аутентифікація користувача за логіном та паролем."""
         if not settings.ENABLE_PASSWORD_AUTH:
             raise HTTPException(
@@ -115,18 +116,23 @@ class PermissionsController:
             )
 
         logger.debug(f"Token request received for user: {username}")
-        credentials = CredentialsSchema(userName=username, password=password)
-        user_obj = await self.user_controller.authenticate(credentials)
+        # Виправлено: передаємо username та password як окремі параметри у метод authenticate
+        user_obj = await self.user_controller.authenticate(username, password)
 
         if not user_obj:
             logger.warning(f"Authentication failed for user: {username}")
             return Fail(code="4010", msg="Invalid credentials")
 
-        await self.user_controller.update_last_login(user_obj.id)
+        await self.log_action(
+            log_type="UserLog",
+            log_detail_type="UserLoginSuccess",
+            by_user_id=user_obj.id,
+        )
+
         payload = JWTPayload(
             data={
                 "userId": user_obj.id,
-                "userName": user_obj.user_name,
+                "userName": user_obj.username,
                 "tokenType": "accessToken",
             },
             iat=datetime.now(timezone.utc),
@@ -135,22 +141,13 @@ class PermissionsController:
         )
         access_token = create_access_token(data=payload)
 
-        await self.log_action(
-            log_type="UserLog",
-            log_detail_type="UserLoginSuccess",
-            by_user_id=user_obj.id,
-        )
         logger.info(f"Successful login for user: {username}")
         return {"access_token": access_token, "token_type": "bearer"}
-
-    async def health_check(self) -> Dict[str, Any]:
-        """Перевірка здоров'я системи."""
-        return {"status": "ok", "version": settings.APP_NAME}
 
     async def request_otp(
         self, data: RequestOTPSchema, background_tasks: Optional[BackgroundTasks] = None
     ) -> Dict[str, Any]:
-        """Запит OTP для реєстрації."""
+        """Запит OTP для реєстрації або входу."""
         if not settings.ENABLE_OTP_AUTH:
             raise HTTPException(
                 status_code=404, detail="OTP authentication is disabled"
@@ -184,27 +181,27 @@ class PermissionsController:
             return Fail(code="4000", msg="Invalid or expired OTP")
 
         try:
-            # Отримуємо роль користувача
-            role = await role_controller.get_by_code("R_USER")
+            # Отримуємо роль користувача за назвою
+            role = await role_controller.get_by_name("user")
 
             # Створюємо користувача
             user_data = UserCreate(
-                user_name=data.email,
-                user_email=data.email,
-                nick_name=data.email,
+                username=data.email,
+                email=data.email,
+                first_name=data.email.split("@")[0],
                 password=data.otp,  # Використовуємо OTP як початковий пароль
             )
             user = await self.user_controller.create(user_data)
 
-            # Додаємо роль користувачу
+            # Додаємо роль користувачу, якщо вона існує
             if role:
-                await user.roles.add(role)
+                await self.user_controller.assign_role(user.id, role.id)
 
             # Створюємо токен для користувача
             payload = JWTPayload(
                 data={
                     "userId": user.id,
-                    "userName": user.user_name,
+                    "userName": user.username,
                     "tokenType": "accessToken",
                 },
                 iat=datetime.now(timezone.utc),
@@ -217,7 +214,7 @@ class PermissionsController:
             return Success(
                 data={
                     "userId": user.id,
-                    "userName": user.user_name,
+                    "userName": user.username,
                     "token": access_token,
                 }
             )
@@ -246,7 +243,7 @@ class PermissionsController:
         payload = JWTPayload(
             data={
                 "userId": user.id,
-                "userName": user.user_name,
+                "userName": user.username,
                 "tokenType": "accessToken",
             },
             iat=datetime.now(timezone.utc),
@@ -257,7 +254,7 @@ class PermissionsController:
         access_token = create_access_token(data=payload)
 
         return Success(
-            data={"userId": user.id, "userName": user.user_name, "token": access_token}
+            data={"userId": user.id, "userName": user.username, "token": access_token}
         )
 
     async def check_email(self, email: str) -> Dict[str, Any]:
@@ -267,4 +264,4 @@ class PermissionsController:
 
 
 # Створюємо екземпляр контролера для глобального використання
-permissions_controller = PermissionsController()
+otp_controller = OTPController()

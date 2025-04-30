@@ -16,8 +16,8 @@ from src.core.exceptions.handlers import add_exception_handlers
 
 # Імпортуємо middleware для логування з правильного місця
 from src.core.models.logging.middleware import OptimizedRequestLoggingMiddleware
-from src.core.loader.module_registry.registry import register_all_models
-from src.core.loader.module_registry.loader import setup_app_modules
+from src.core.loader_factory.registry_factory.registry import register_all_models
+from src.core.loader_factory.registry_factory.loader import setup_app_modules
 
 # Імпортуємо наші нові сервіси логування
 from src.core.models.logging.loguru_service import OptimizedLoguruService
@@ -49,8 +49,8 @@ async def lifespan(app: FastAPI):
 
     # Перевірка наявності нових міграцій
     if has_pending_migrations():
-        print("⚠️ УВАГА: В базі даних є незастосовані міграції!")
-        print("Запустіть 'alembic upgrade head' для застосування міграцій.")
+        print("⚠️  УВАГА: В базі даних є незастосовані міграції!")
+        print("⚠️  Запустіть 'alembic upgrade head' для застосування міграцій.")
 
     # Налаштування loguru з записом у БД
     try:
@@ -118,8 +118,8 @@ def create_app() -> FastAPI:
     # Create FastAPI app
     app = FastAPI(
         title=settings.APP_NAME,
-        description="Avocado API",
-        version="0.1.0",
+        description=settings.APP_DESCRIPTION,
+        version=settings.APP_VERSION,
         lifespan=lifespan,
         docs_url=docs_url,
         redoc_url=redoc_url,
@@ -156,8 +156,8 @@ def create_app() -> FastAPI:
 
             openapi_schema = get_openapi(
                 title=settings.APP_NAME,
-                version="0.1.0",
-                description="Avocado API - Система для управління малим та середнім бізнесом",
+                version=settings.APP_VERSION,
+                description=settings.APP_DESCRIPTION,
                 routes=app.routes,
             )
 
@@ -166,6 +166,32 @@ def create_app() -> FastAPI:
                 "name": "Support",
                 "email": "support@avocado.example.com",
             }
+
+            # Додаємо компонент безпеки для API токена
+            openapi_schema.setdefault("components", {}).setdefault("securitySchemes", {})
+
+            # Налаштування JWT Bearer Token
+            openapi_schema["components"]["securitySchemes"]["bearerAuth"] = {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "Введіть ваш JWT токен у форматі: Bearer {token}"
+            }
+
+            # Налаштування API Key
+            openapi_schema["components"]["securitySchemes"]["apiKeyAuth"] = {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-API-Key",
+                "description": "Введіть ваш API токен"
+            }
+
+            # Глобальні налаштування безпеки для всіх ендпоінтів
+            # Клієнт може використати або JWT, або API Key
+            openapi_schema["security"] = [
+                {"bearerAuth": []},
+                {"apiKeyAuth": []}
+            ]
 
             app.openapi_schema = openapi_schema
             return app.openapi_schema
