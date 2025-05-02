@@ -18,7 +18,7 @@ from src.core.database.connection import get_sync_db
 from src.core.models.logging.logging_service import OptimizedLoggingService
 from src.core.models.logging.loguru_service import OptimizedLoguruService
 from src.core.models.logging.providers import set_global_logger
-from src.core.models.loader.registry import register_all_models
+from src.core.loader_factory.registry_factory.registry import register_all_models
 
 
 def setup_logger():
