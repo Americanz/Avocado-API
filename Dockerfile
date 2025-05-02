@@ -1,24 +1,36 @@
-FROM python:3.10-slim
+# Використовуємо офіційний образ Python
+FROM python:3.11-slim
 
+# Встановлюємо необхідні інструменти
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Встановлюємо poetry
+RUN pip install --no-cache-dir poetry
+
+# Встановлюємо робочу директорію в контейнері
 WORKDIR /app
 
-# Install poetry
-RUN pip install poetry==1.5.1
+# Копіюємо файли poetry
+COPY pyproject.toml poetry.lock* ./
 
-# Copy poetry configuration files
-COPY pyproject.toml poetry.lock* /app/
-
-# Configure poetry to not use a virtual environment
+# Налаштовуємо poetry для НЕ створення віртуального середовища
 RUN poetry config virtualenvs.create false
 
-# Install dependencies
-RUN poetry install --no-dev --no-interaction --no-ansi
+# Встановлюємо залежності
+RUN poetry install --no-root
 
-# Copy project files
-COPY . /app/
+# Копіюємо решту файлів проекту
+COPY . .
 
-# Expose port
+# Створюємо необхідні директорії та встановлюємо права
+RUN mkdir -p /data_db /app/logs \
+    && chmod -R 777 /data_db /app/logs
+
+# Відкриваємо порти
 EXPOSE 8000
 
-# Run the application
-CMD ["python", "run.py"]
+# Встановлюємо команду за замовчуванням
+CMD ["poetry", "run", "python", "run.py"]
