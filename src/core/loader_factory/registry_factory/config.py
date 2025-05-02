@@ -18,6 +18,7 @@ FEATURE_MODULES = [
     # "src.features.catalog.category",
     "src.features.checkbox.reports",
     "src.features.checkbox.product_sale",
+    # "src.features.files_manager",  # Додаємо новий модуль для роботи з Supabase
     # Додайте інші модулі
 ]
 

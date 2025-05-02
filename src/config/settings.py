@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 from dotenv import load_dotenv
-from pydantic import model_validator
+from pydantic import model_validator, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Завантаження змінних середовища з .env файлу
@@ -73,7 +73,8 @@ class Settings(BaseSettings):
         "1",
     ]
     ENABLE_EMAIL_NOTIFICATIONS: bool = os.getenv(
-        "ENABLE_EMAIL_NOTIFICATIONS", "False").lower() in [
+        "ENABLE_EMAIL_NOTIFICATIONS", "False"
+    ).lower() in [
         "true",
         "1",
     ]
@@ -90,8 +91,12 @@ class Settings(BaseSettings):
 
     # Telegram Bot settings
     TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    TELEGRAM_AUTH_EXPIRY_MINUTES: int = int(os.getenv("TELEGRAM_AUTH_EXPIRY_MINUTES", "15"))
-    ENABLE_TELEGRAM_AUTH: bool = os.getenv("ENABLE_TELEGRAM_AUTH", "true").lower() == "true"
+    TELEGRAM_AUTH_EXPIRY_MINUTES: int = int(
+        os.getenv("TELEGRAM_AUTH_EXPIRY_MINUTES", "15")
+    )
+    ENABLE_TELEGRAM_AUTH: bool = (
+        os.getenv("ENABLE_TELEGRAM_AUTH", "true").lower() == "true"
+    )
 
     # Налаштування CORS
     CORS_ORIGINS: List[str] = ["*"]  # Буде перезаписано з .env
@@ -144,6 +149,19 @@ class Settings(BaseSettings):
         "ENVIRONMENT", "development"
     )  # development, production
 
+    # Налаштування Supabase
+    # Використовуємо змінні SUPABASE_URL та SUPABASE_KEY
+    # для зворотної сумісності
+    SUPABASE_URL: str = os.getenv(
+        "SUPABASE_URL", "https://your-supabase-url.supabase.co"
+    )
+    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "your-supabase-key")
+    SUPABASE_BUCKET: str = os.getenv("SUPABASE_BUCKET", "files_bucket")
+
+    # Підтримка обох варіантів назв для змінних
+    SUPABASE_API_URL: Optional[str] = Field(None, exclude=True)
+    SUPABASE_API_KEY: Optional[str] = Field(None, exclude=True)
+
     @model_validator(mode="after")
     def set_database_urls(self) -> "Settings":
         """
@@ -165,12 +183,19 @@ class Settings(BaseSettings):
                     "postgresql://", "postgresql+asyncpg://"
                 )
 
+        # Handle Supabase env vars from both naming conventions
+        if os.getenv("SUPABASE_API_URL"):
+            self.SUPABASE_URL = os.getenv("SUPABASE_API_URL")
+        if os.getenv("SUPABASE_API_KEY"):
+            self.SUPABASE_KEY = os.getenv("SUPABASE_API_KEY")
+
         return self
 
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
+        extra="allow",  # Дозволяємо додаткові поля
     )
 
 

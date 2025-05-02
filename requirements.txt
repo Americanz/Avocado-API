@@ -21,3 +21,6 @@ openpyxl==3.1.2
 # Для середовища розробки
 pytest==7.4.0
 pytest-asyncio==0.21.1
+
+# Supabase client
+supabase>=1.0.3
