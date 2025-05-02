@@ -121,8 +121,9 @@ __pycache__/*
 migrations/*
 project_structure*
 data_db/*
-Docker-compose.yml
+
 
 alembic/version/*
 *.db
 create_project_structure.py
+create_module_structure.py

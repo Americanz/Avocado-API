@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: api
+    ports:
+      - "8097:8000"
+    volumes:
+      - data_db:/app/data_db
+    env_file:
+      - stack.env
+    command: poetry run python run.py
+
+volumes:
+  data_db:
