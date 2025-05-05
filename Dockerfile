@@ -29,8 +29,14 @@ COPY . .
 RUN mkdir -p /data_db /app/logs \
     && chmod -R 777 /data_db /app/logs
 
+# Делаем entrypoint-скрипт исполняемым
+RUN chmod +x /app/docker-entrypoint.sh
+
 # Відкриваємо порти
 EXPOSE 8000
+
+# Используем наш entrypoint-скрипт
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 # Встановлюємо команду за замовчуванням
 CMD ["poetry", "run", "python", "run.py"]
