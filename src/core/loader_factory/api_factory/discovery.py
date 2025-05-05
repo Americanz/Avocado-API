@@ -191,6 +191,7 @@ def discover_and_create_generic_routes(api_router: APIRouter) -> None:
         discover_schemas_in_module(schema_module_path)
 
     # Тепер створюємо маршрути для всіх моделей з повними схемами
+    # Импортируем get_all_models внутри функции, чтобы избежать циклической зависимости
     from src.core.loader_factory.registry_factory.registry import get_all_models
 
     for model_name, model_class in get_all_models().items():

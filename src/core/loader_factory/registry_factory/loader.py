@@ -27,9 +27,6 @@ if logger is None:
 
     logger = logging.getLogger(__name__)
 
-# Імпортуємо функцію для генерації універсальних маршрутів
-from src.core.loader_factory.api_factory.discovery import discover_and_create_generic_routes
-
 
 def get_base_modules() -> List[str]:
     """
@@ -128,6 +125,11 @@ def load_module_routes(api_router: APIRouter, version_prefix: str = "") -> None:
         logger.info(
             "Запуск генерації універсальних маршрутів...", module="module_loader"
         )
+        # Імпортуємо функцію всередині функції, щоб уникнути циклічної залежності
+        from src.core.loader_factory.api_factory.discovery import (
+            discover_and_create_generic_routes,
+        )
+
         discover_and_create_generic_routes(api_router)
         logger.info("Універсальні маршрути успішно згенеровані", module="module_loader")
     except Exception as e:
