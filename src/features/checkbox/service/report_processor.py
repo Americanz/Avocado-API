@@ -22,36 +22,26 @@ from src.features.checkbox.utils.data_utils import (
     calculate_file_hash,
 )
 
+# Импортируем наш адаптер логирования
+from src.features.checkbox.utils.logger_adapter import checkbox_logger
 from src.core.models.logging.providers import get_global_logger
 
 # Отримуємо логер з резервним варіантом, якщо глобальний логер ще не ініціалізований
-logger = get_global_logger()
-# Якщо глобальний логер не ініціалізований, використовуємо стандартний logging
-if logger is None:
+original_logger = get_global_logger()
+
+# Используем наш адаптер для обеспечения совместимости с различными форматами вызовов
+logger = checkbox_logger
+if original_logger:
+    logger.logger = original_logger
+
+# Якщо глобальний логер не ініціалізований, используем стандартный логгер
+if original_logger is None:
     standard_logger = logging.getLogger("report_processor")
     standard_logger.setLevel(logging.INFO)
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
     standard_logger.addHandler(handler)
-    
-    # Створюємо об'єкт-замінник з тими ж методами, що й OptimizedLoguruService
-    class FallbackLogger:
-        def info(self, message, module=None, data=None):
-            standard_logger.info(f"{module or ''}: {message} {data or ''}")
-            
-        def error(self, message, module=None, data=None, error=None):
-            if error:
-                standard_logger.exception(f"{module or ''}: {message} {data or ''}")
-            else:
-                standard_logger.error(f"{module or ''}: {message} {data or ''}")
-                
-        def warning(self, message, module=None, data=None):
-            standard_logger.warning(f"{module or ''}: {message} {data or ''}")
-            
-        def debug(self, message, module=None, data=None):
-            standard_logger.debug(f"{module or ''}: {message} {data or ''}")
-    
-    logger = FallbackLogger()
+    logger.logger = standard_logger
 
 
 def get_product_sales(

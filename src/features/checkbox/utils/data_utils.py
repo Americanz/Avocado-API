@@ -3,7 +3,8 @@ import hashlib
 import pandas as pd
 from typing import Any, Optional, Union, TypeVar, Dict
 
-from loguru import logger
+# Заменяем импорт loguru на наш адаптер
+from src.features.checkbox.utils.logger_adapter import checkbox_logger as logger
 
 T = TypeVar('T')  # Для типізації функції safe_get
 
