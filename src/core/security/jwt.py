@@ -12,7 +12,6 @@ from fastapi.security.utils import get_authorization_scheme_param
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 
 from src.config import settings
-from src.core.models.auth.tokens.controller import token_controller
 
 # OAuth2 scheme for token authentication
 API_SCOPES = {
@@ -50,9 +49,6 @@ class CustomOAuth2PasswordBearerWithDataField(OAuth2):
 oauth2_scheme = CustomOAuth2PasswordBearerWithDataField(
     tokenUrl="/api/v1/users/login", scopes=API_SCOPES
 )
-
-# API Key схема авторизації (импортируем из контроллера токенов)
-from src.core.models.auth.tokens.auth import api_key_scheme
 
 # Константи для типів доступу
 ACCESS_USER = "user"
@@ -258,13 +254,56 @@ def require_auth(
     return current_user
 
 
-# Используем функции из модуля auth.tokens
-from src.core.models.auth.tokens.auth import (
-    get_current_user_by_api_key,
-    get_current_user_universal,
-    require_auth_universal,
-    get_admin_universal,
-)
+# Перемещаем импорты внутрь функций
+def get_current_user_by_api_key(api_key: str = None):
+    """
+    Get current user by API key.
+
+    This is a wrapper function to avoid circular imports.
+    """
+    from src.core.models.auth.tokens.auth import (
+        get_current_user_by_api_key as get_api_key_user,
+    )
+
+    return get_api_key_user(api_key)
+
+
+def get_current_user_universal(api_key: str = None, token: str = None):
+    """
+    Get current user by either API key or JWT token.
+
+    This is a wrapper function to avoid circular imports.
+    """
+    from src.core.models.auth.tokens.auth import (
+        get_current_user_universal as get_universal_user,
+    )
+
+    return get_universal_user(api_key, token)
+
+
+def require_auth_universal(current_user=None):
+    """
+    Require authentication using either API key or JWT token.
+
+    This is a wrapper function to avoid circular imports.
+    """
+    from src.core.models.auth.tokens.auth import (
+        require_auth_universal as require_auth_func,
+    )
+
+    return require_auth_func(current_user)
+
+
+def get_admin_universal(current_user=None):
+    """
+    Get admin user using either API key or JWT token.
+
+    This is a wrapper function to avoid circular imports.
+    """
+    from src.core.models.auth.tokens.auth import get_admin_universal as get_admin_func
+
+    return get_admin_func(current_user)
+
 
 # Экспортируем функции для использования в других модулях
 __all__ = [
