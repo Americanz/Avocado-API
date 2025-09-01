@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import List
 
 from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Boolean
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import relationship
 
 from src.core.models.base_model import BaseModel
@@ -49,7 +50,7 @@ class Token(BaseModel):
 
     # Зв'язок з користувачем, який створив токен
     user_id = Column(
-        String(36),
+        PgUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         comment="ID користувача, якому належить токен",

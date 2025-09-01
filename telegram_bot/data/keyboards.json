@@ -1,0 +1,68 @@
+{
+    "main": [
+        {
+            "text": "Мій баланс",
+            "enabled": true,
+            "handler": "show_balance"
+        },
+        {
+            "text": "Історія бонусів",
+            "enabled": true,
+            "handler": "show_history"
+        },
+        {
+            "text": "🛍️ Каталог товарів",
+            "enabled": true,
+            "handler": "show_products"
+        },
+        {
+            "text": "Поділитись номером",
+            "enabled": true,
+            "handler": "share_phone"
+        }
+    ],
+    "admin": [
+        {
+            "text": "Адмін-панель",
+            "enabled": true,
+            "handler": "admin_panel"
+        },
+        {
+            "text": "Статистика",
+            "enabled": true,
+            "handler": "admin_stats"
+        },
+        {
+            "text": "Нарахувати бонуси",
+            "enabled": true,
+            "handler": "add_bonus"
+        },
+        {
+            "text": "Керування бонусами",
+            "enabled": true,
+            "handler": "admin_bonuses"
+        },
+        {
+            "text": "Керування користувачами",
+            "enabled": true,
+            "handler": "admin_users"
+        },
+        {
+            "text": "🏪 Синхронізація Poster",
+            "enabled": true,
+            "handler": "poster_sync"
+        },
+        {
+            "text": "⬅️ Назад",
+            "enabled": true,
+            "handler": "admin_back",
+            "silent": true
+        },
+        {
+            "text": "⬅️ Назад до адмін-панелі",
+            "enabled": true,
+            "handler": "admin_back_to_panel",
+            "silent": true
+        }
+    ]
+}

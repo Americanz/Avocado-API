@@ -1,0 +1,125 @@
+{
+    "main": [
+        {
+            "text": "Мій баланс",
+            "enabled": true,
+            "handler": "show_balance"
+        },
+        {
+            "text": "Історія бонусів",
+            "enabled": true,
+            "handler": "show_history"
+        },
+        {
+            "text": "Поділитись номером",
+            "enabled": true,
+            "handler": "share_phone"
+        },
+        {
+            "text": "Адмін-панель",
+            "enabled": true,
+            "handler": "admin_panel",
+            "requires_role": "admin"
+        }
+    ],
+    "admin": [
+        {
+            "text": "Статистика",
+            "enabled": true,
+            "handler": "admin_stats"
+        },
+        {
+            "text": "Керування бонусами",
+            "enabled": true,
+            "handler": "admin_bonuses"
+        },
+        {
+            "text": "Керування користувачами",
+            "enabled": true,
+            "handler": "admin_users"
+        },
+        {
+            "text": "⬅️ Назад",
+            "enabled": true,
+            "handler": "nav_back",
+            "silent": true
+        }
+    ],
+    "admin_stats": [
+        {
+            "text": "⬅️ Назад до адмін-панелі",
+            "enabled": true,
+            "handler": "nav_back",
+            "silent": true
+        }
+    ],
+    "admin_bonuses": [
+        {
+            "text": "Нарахувати бонуси",
+            "enabled": true,
+            "handler": "add_bonus"
+        },
+        {
+            "text": "Списати бонуси",
+            "enabled": true,
+            "handler": "remove_bonus"
+        },
+        {
+            "text": "Переглянути історію",
+            "enabled": true,
+            "handler": "view_bonus_history"
+        },
+        {
+            "text": "⬅️ Назад до адмін-панелі",
+            "enabled": true,
+            "handler": "nav_back",
+            "silent": true
+        }
+    ],
+    "admin_users": [
+        {
+            "text": "Пошук користувача",
+            "enabled": true,
+            "handler": "search_user"
+        },
+        {
+            "text": "Заблокувати користувача",
+            "enabled": true,
+            "handler": "block_user"
+        },
+        {
+            "text": "Розблокувати користувача",
+            "enabled": true,
+            "handler": "unblock_user"
+        },
+        {
+            "text": "Експорт списку",
+            "enabled": true,
+            "handler": "export_users"
+        },
+        {
+            "text": "⬅️ Назад до адмін-панелі",
+            "enabled": true,
+            "handler": "nav_back",
+            "silent": true
+        }
+    ],
+    "user_details": [
+        {
+            "text": "Редагувати",
+            "enabled": true,
+            "handler": "edit_user"
+        },
+        {
+            "text": "Видалити",
+            "enabled": true,
+            "handler": "delete_user"
+        },
+        {
+            "text": "⬅️ Назад",
+            "enabled": true,
+            "handler": "nav_back",
+            "silent": true
+        }
+    ]
+}

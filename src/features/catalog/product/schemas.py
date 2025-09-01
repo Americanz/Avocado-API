@@ -3,7 +3,7 @@ Schemas for product operations.
 """
 
 from datetime import datetime
-from typing import List, Optional, Any
+from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field, validator
@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, validator
 
 class ProductBase(BaseModel):
     """Base schema for product data."""
-    
+
     name: str
     description: Optional[str] = None
     sku: Optional[str] = None
@@ -23,16 +23,18 @@ class ProductBase(BaseModel):
     stock_quantity: int = 0
     min_stock_quantity: Optional[int] = None
     category_id: Optional[UUID] = None
+    image_url: Optional[str] = None  # Посилання на зображення в S3
 
 
 class ProductCreate(ProductBase):
     """Schema for creating a product."""
+
     pass
 
 
 class ProductUpdate(BaseModel):
     """Schema for updating a product."""
-    
+
     name: Optional[str] = None
     description: Optional[str] = None
     sku: Optional[str] = None
@@ -44,14 +46,15 @@ class ProductUpdate(BaseModel):
     stock_quantity: Optional[int] = None
     min_stock_quantity: Optional[int] = None
     category_id: Optional[UUID] = None
-    
-    @validator('price', 'cost_price', 'tax_rate', pre=True)
+    image_url: Optional[str] = None  # Посилання на зображення в S3
+
+    @validator("price", "cost_price", "tax_rate", pre=True)
     def validate_prices(cls, value):
         if value is not None and value < 0:
             raise ValueError("Price values cannot be negative")
         return value
-    
-    @validator('stock_quantity', 'min_stock_quantity', pre=True)
+
+    @validator("stock_quantity", "min_stock_quantity", pre=True)
     def validate_quantities(cls, value):
         if value is not None and value < 0:
             raise ValueError("Quantity values cannot be negative")
@@ -60,38 +63,38 @@ class ProductUpdate(BaseModel):
 
 class ProductResponse(ProductBase):
     """Schema for product response."""
-    
+
     id: UUID
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         """Pydantic config."""
-        
+
         from_attributes = True
 
 
 class ProductWithCategory(ProductResponse):
     """Schema for product with category information."""
-    
+
     category_name: Optional[str] = None
-    
+
     class Config:
         """Pydantic config."""
-        
+
         from_attributes = True
 
 
 class ProductPaginationResponse(BaseModel):
     """Schema for paginated product list response."""
-    
+
     total: int
     items: List[ProductResponse]
 
 
 class ProductFilter(BaseModel):
     """Schema for product filtering."""
-    
+
     name: Optional[str] = None
     sku: Optional[str] = None
     barcode: Optional[str] = None

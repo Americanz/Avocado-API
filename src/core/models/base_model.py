@@ -3,13 +3,16 @@ Base model for all database models in the application with support for generic r
 """
 
 import uuid
+import os
 from datetime import datetime
 from typing import ClassVar, List, Optional, Dict, Any
+
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
+from src.config import settings
 
 from sqlalchemy import Column, DateTime, Boolean, String
 from sqlalchemy.ext.declarative import declared_attr
 from src.core.database.connection import Base
-
 
 
 class BaseModel(Base):
@@ -27,8 +30,6 @@ class BaseModel(Base):
 
     __abstract__ = True
 
-
-
     # Атрибути для налаштування універсальних маршрутів
     use_generic_routes: ClassVar[bool] = False  # За замовчуванням не використовується
     public_routes: ClassVar[bool] = False  # За замовчуванням маршрути захищені
@@ -38,12 +39,21 @@ class BaseModel(Base):
 
     # Примітка: id колонку треба створити в кожній моделі за допомогою методу
     # В BaseModel
-    id = Column(
-        String(36),
-        primary_key=True,
-        default=lambda: str(uuid.uuid4()),
-        comment="Унікальний ідентифікатор запису",
-    )
+
+    if settings.DATABASE_URL.startswith("postgresql"):
+        id = Column(
+            PgUUID(as_uuid=True),
+            primary_key=True,
+            default=uuid.uuid4,
+            comment="Унікальний ідентифікатор запису",
+        )
+    else:
+        id = Column(
+            String(36),
+            primary_key=True,
+            default=lambda: str(uuid.uuid4()),
+            comment="Унікальний ідентифікатор запису",
+        )
     # після визначення engine
 
     # Поля для відстеження часу створення та оновлення

@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, String, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from src.core.models.base_model import BaseModel
 
 
@@ -22,13 +23,11 @@ class User(BaseModel):
     last_name = Column(String, nullable=True)
     is_superuser = Column(Boolean, default=False, nullable=False)
 
-    role_id = Column(String(36), ForeignKey("roles.id"), nullable=True)
+    role_id = Column(PgUUID(as_uuid=True), ForeignKey("roles.id"), nullable=True)
     role = relationship("Role", back_populates="users")
 
     # Связь з токенами
-    tokens = relationship(
-        "Token", back_populates="user", cascade="all, delete-orphan"
-    )
+    tokens = relationship("Token", back_populates="user", cascade="all, delete-orphan")
 
     def __str__(self):
         return self.username or self.email  # Повертаємо email, якщо username порожній

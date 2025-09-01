@@ -2,10 +2,7 @@
 Category model for catalog management.
 """
 
-from typing import List, Optional
-from uuid import UUID
-
-from sqlalchemy import Boolean, Column, ForeignKey, String, Text
+from sqlalchemy import Column, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import relationship
 
@@ -19,8 +16,7 @@ class Category(BaseModel):
 
     name = Column(String, nullable=False, index=True)
     description = Column(Text, nullable=True)
-    
-
+    image_url = Column(String, nullable=True, comment="Посилання на зображення в S3")
 
     # Parent-child relationship (hierarchical structure)
     parent_id = Column(PgUUID(as_uuid=True), ForeignKey("categories.id"), nullable=True)

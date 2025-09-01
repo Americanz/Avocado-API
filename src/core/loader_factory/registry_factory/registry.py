@@ -110,7 +110,7 @@ def register_all_models() -> Dict[str, Type[BaseModel]]:
 
     # Додаємо модулі з конфігурації ALL_MODULES
     for module in ALL_MODULES:
-        if module.endswith(".model"):
+        if module.endswith(".model") or module.endswith(".models"):
             model_modules.append(module)
         else:
             model_modules.append(f"{module}.model")

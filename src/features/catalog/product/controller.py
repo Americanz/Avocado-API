@@ -50,7 +50,9 @@ class ProductController(CRUDBase[Product, ProductCreate, ProductUpdate]):
         Returns:
             Product object or None if not found
         """
-        return await self.get_by_attribute(self.db, "sku", sku, select_related=["category"])
+        return await self.get_by_attribute(
+            self.db, "sku", sku, select_related=["category"]
+        )
 
     async def get_by_barcode(self, barcode: str) -> Optional[Product]:
         """
@@ -62,13 +64,15 @@ class ProductController(CRUDBase[Product, ProductCreate, ProductUpdate]):
         Returns:
             Product object or None if not found
         """
-        return await self.get_by_attribute(self.db, "barcode", barcode, select_related=["category"])
+        return await self.get_by_attribute(
+            self.db, "barcode", barcode, select_related=["category"]
+        )
 
     async def get_all(
         self,
         skip: int = 0,
         limit: int = 100,
-        filter_params: Optional[Dict[str, Any]] = None
+        filter_params: Optional[Dict[str, Any]] = None,
     ) -> Tuple[int, List[Product]]:
         """
         Get all products with filtering and pagination.
@@ -104,7 +108,9 @@ class ProductController(CRUDBase[Product, ProductCreate, ProductUpdate]):
                 custom_filters.append(Product.sku.ilike(f"%{filter_params['sku']}%"))
 
             if filter_params.get("barcode"):
-                custom_filters.append(Product.barcode.ilike(f"%{filter_params['barcode']}%"))
+                custom_filters.append(
+                    Product.barcode.ilike(f"%{filter_params['barcode']}%")
+                )
 
             if filter_params.get("min_price") is not None:
                 custom_filters.append(Product.price >= filter_params["min_price"])
@@ -118,16 +124,25 @@ class ProductController(CRUDBase[Product, ProductCreate, ProductUpdate]):
             # Додаємо складні фільтри до параметрів
             filters["_custom_filters"] = custom_filters
 
+        # Підготовка параметрів для базового CRUD
+        page = (skip // limit) + 1 if limit else 1
+        page_size = limit
+        # Підтримка складних фільтрів
+        search_filter = None
+        if filters.get("_custom_filters"):
+            from sqlalchemy import and_
+
+            search_filter = and_(*filters["_custom_filters"])
         # Використовуємо базовий CRUD.list
         return await self.list(
             self.db,
-            skip=skip,
-            limit=limit,
-            filters=filters,
-            search_term=search_term,
-            order_by=order_by,
+            page=page,
+            page_size=page_size,
+            search_filter=search_filter,
+            order_by=[order_by] if order_by else None,
             search_fields=["name", "sku", "barcode", "description"],
-            select_related=["category"]
+            search_term=search_term,
+            select_related=["category"],
         )
 
     async def get_by_category(
@@ -135,7 +150,7 @@ class ProductController(CRUDBase[Product, ProductCreate, ProductUpdate]):
         category_id: UUID,
         skip: int = 0,
         limit: int = 100,
-        include_inactive: bool = False
+        include_inactive: bool = False,
     ) -> Tuple[int, List[Product]]:
         """
         Get products by category.
@@ -160,7 +175,7 @@ class ProductController(CRUDBase[Product, ProductCreate, ProductUpdate]):
             limit=limit,
             filters=filters,
             order_by="name",
-            select_related=["category"]
+            select_related=["category"],
         )
 
     async def search(
@@ -168,7 +183,7 @@ class ProductController(CRUDBase[Product, ProductCreate, ProductUpdate]):
         search_term: str,
         skip: int = 0,
         limit: int = 100,
-        include_inactive: bool = False
+        include_inactive: bool = False,
     ) -> Tuple[int, List[Product]]:
         """
         Search products by name, SKU, or barcode.
@@ -195,7 +210,7 @@ class ProductController(CRUDBase[Product, ProductCreate, ProductUpdate]):
             filters=filters,
             search_fields=["name", "sku", "barcode", "description"],
             order_by="name",
-            select_related=["category"]
+            select_related=["category"],
         )
 
     async def create(self, product_data: ProductCreate) -> Product:
@@ -210,7 +225,9 @@ class ProductController(CRUDBase[Product, ProductCreate, ProductUpdate]):
         """
         return await super().create(self.db, product_data)
 
-    async def update(self, product_id: UUID, product_data: ProductUpdate) -> Optional[Product]:
+    async def update(
+        self, product_id: UUID, product_data: ProductUpdate
+    ) -> Optional[Product]:
         """
         Update a product.
 
@@ -235,7 +252,9 @@ class ProductController(CRUDBase[Product, ProductCreate, ProductUpdate]):
         """
         return await self.remove(self.db, product_id)
 
-    async def update_stock(self, product_id: UUID, quantity_change: int) -> Optional[Product]:
+    async def update_stock(
+        self, product_id: UUID, quantity_change: int
+    ) -> Optional[Product]:
         """
         Update product stock quantity.
 
@@ -264,32 +283,34 @@ class ProductController(CRUDBase[Product, ProductCreate, ProductUpdate]):
 
         return product
 
-    async def prepare_product_with_category(self, product: Product) -> Dict[str, Any]:
+    async def prepare_product_with_category(
+        self, product: Product
+    ) -> "ProductWithCategory":
         """
-        Prepare product response with category name.
+        Prepare product response with category name using Pydantic schema.
 
         Args:
             product: Product object
 
         Returns:
-            Product dict with category name
+            ProductWithCategory Pydantic schema
         """
-        product_dict = {
-            "id": product.id,
-            "name": product.name,
-            "description": product.description,
-            "sku": product.sku,
-            "barcode": product.barcode,
-            "price": product.price,
-            "cost_price": product.cost_price,
-            "tax_rate": product.tax_rate,
-            "is_active": product.is_active,
-            "stock_quantity": product.stock_quantity,
-            "min_stock_quantity": product.min_stock_quantity,
-            "category_id": product.category_id,
-            "created_at": product.created_at,
-            "updated_at": product.updated_at,
-            "category_name": product.category.name if product.category else None
-        }
+        from src.features.catalog.product.schemas import ProductWithCategory
 
-        return product_dict
+        return ProductWithCategory(
+            id=product.id,
+            name=product.name,
+            description=product.description,
+            sku=product.sku,
+            barcode=product.barcode,
+            price=product.price,
+            cost_price=product.cost_price,
+            tax_rate=product.tax_rate,
+            is_active=product.is_active,
+            stock_quantity=product.stock_quantity,
+            min_stock_quantity=product.min_stock_quantity,
+            category_id=product.category_id,
+            created_at=product.created_at,
+            updated_at=product.updated_at,
+            category_name=product.category.name if product.category else None,
+        )

@@ -103,6 +103,9 @@ async def list_products(
         filter_params=filter_params
     )
 
+    # Перетворюємо продукти у схеми ProductWithCategory
+    items = [ProductWithCategory.model_validate(prod) for prod in products]
+
     # Log action
     await log_action(
         action_type="READ",
@@ -110,10 +113,7 @@ async def list_products(
         current_user=current_user,
     )
 
-    return {
-        "total": total,
-        "items": products
-    }
+    return ProductPaginationResponse(total=total, items=items)
 
 
 @protected_router.get("/search", response_model=ProductPaginationResponse)

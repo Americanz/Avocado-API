@@ -105,6 +105,8 @@ alembic revision --autogenerate -m "Description of changes"
 alembic upgrade head
 ```
 
+alembic current
+
 ### Створення нових модулів
 
 Кожен функціональний модуль повинен мати наступну структуру:
@@ -133,6 +135,7 @@ modules/
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
+host.docker.internal
 
 
 

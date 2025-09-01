@@ -15,11 +15,18 @@ BASE_MODULES = [
 FEATURE_MODULES = [
     # "src.features.clients",
     # "src.features.catalog.product",
+    # "src.features.catalog.price",
     # "src.features.catalog.category",
-    "src.features.checkbox.reports",
-    "src.features.checkbox.product_sale",
+    # "src.features.checkbox.reports",
+    # "src.features.checkbox.product_sale",
     # "src.features.files_manager",  # Додаємо новий модуль для роботи з Supabase
     # Додайте інші модулі
+    #  "src.features.telegram_bot",
+]
+
+# Додаткові модулі, які мають інші назви файлів (не model.py)
+ADDITIONAL_MODEL_MODULES = [
+    "src.features.telegram_bot.models",
 ]
 
 # Папки, в яких шукати моделі (відносно кореня проекту)
@@ -30,7 +37,7 @@ MODEL_SEARCH_PATHS = [
 ]
 
 # Всі активні модулі (об'єднання базових і додаткових)
-ALL_MODULES = BASE_MODULES + FEATURE_MODULES
+ALL_MODULES = BASE_MODULES + FEATURE_MODULES + ADDITIONAL_MODEL_MODULES
 
 # Словник зареєстрованих модулів з відповідними API префіксами
 # Формат: "module_path": "/api_prefix"

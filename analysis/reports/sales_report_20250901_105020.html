@@ -1,0 +1,923 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Звіт аналізу продажів</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .date {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .chart-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .progress-bar {
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 10px;
+            margin: 5px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: white;
+            font-size: 1.1em;
+        }
+
+        .analysis-section {
+            margin-bottom: 40px;
+        }
+
+        .insight {
+            background: #e8f6f3;
+            border-left: 4px solid #1abc9c;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .alert {
+            background: #fdf2e9;
+            border-left: 4px solid #e67e22;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок -->
+        <div class="header">
+            <h1>📊 Звіт аналізу продажів</h1>
+            <div class="date">Створено: 01.09.2025 10:50</div>
+        </div>
+
+        <!-- Основні показники -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="icon">💰</div>
+                <div class="value">71,116,215.26 грн</div>
+                <div class="label">Загальний дохід</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">🛒</div>
+                <div class="value">519,323</div>
+                <div class="label">Кількість транзакцій</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">📈</div>
+                <div class="value">136.94 грн</div>
+                <div class="label">Середній чек</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">👥</div>
+                <div class="value">18,126</div>
+                <div class="label">Унікальних клієнтів</div>
+            </div>
+        </div>
+
+        <!-- Аналіз по точках продажу -->
+        
+        <div class="section">
+            <h2>🏪 Аналіз по точках продажу</h2>
+            
+            <div class="highlight">
+                <h3> LUCHAN  Перемоги</h3>
+                <p><strong>Дохід:</strong> 4,870,784.30 грн</p>
+                <p><strong>Транзакції:</strong> 46653</p>
+                <p><strong>Середній чек:</strong> 104.40 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 6.8%"></div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <h3> LUCHAN Дружби Народів</h3>
+                <p><strong>Дохід:</strong> 7,373,425.52 грн</p>
+                <p><strong>Транзакції:</strong> 67382</p>
+                <p><strong>Середній чек:</strong> 109.43 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 10.4%"></div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <h3> LUCHAN Ківерцівська</h3>
+                <p><strong>Дохід:</strong> 8,254,348.45 грн</p>
+                <p><strong>Транзакції:</strong> 39104</p>
+                <p><strong>Середній чек:</strong> 211.09 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 11.6%"></div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <h3>LUCHAN Володимирська</h3>
+                <p><strong>Дохід:</strong> 2,919,448.65 грн</p>
+                <p><strong>Транзакції:</strong> 23088</p>
+                <p><strong>Середній чек:</strong> 126.45 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 4.1%"></div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <h3>LUCHAN Гордіюк 35</h3>
+                <p><strong>Дохід:</strong> 7,777,255.50 грн</p>
+                <p><strong>Транзакції:</strong> 51480</p>
+                <p><strong>Середній чек:</strong> 151.07 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 10.9%"></div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <h3>LUCHAN Гулака,15</h3>
+                <p><strong>Дохід:</strong> 6,119,744.31 грн</p>
+                <p><strong>Транзакції:</strong> 46558</p>
+                <p><strong>Середній чек:</strong> 131.44 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 8.6%"></div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <h3>LUCHAN Конякіна "Наш"</h3>
+                <p><strong>Дохід:</strong> 2,194,211.97 грн</p>
+                <p><strong>Транзакції:</strong> 16751</p>
+                <p><strong>Середній чек:</strong> 130.99 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 3.1%"></div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <h3>LUCHAN Кравчука,15</h3>
+                <p><strong>Дохід:</strong> 7,692,055.12 грн</p>
+                <p><strong>Транзакції:</strong> 62199</p>
+                <p><strong>Середній чек:</strong> 123.67 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 10.8%"></div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <h3>LUCHAN Львівська</h3>
+                <p><strong>Дохід:</strong> 7,144,080.10 грн</p>
+                <p><strong>Транзакції:</strong> 39465</p>
+                <p><strong>Середній чек:</strong> 181.02 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 10.0%"></div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <h3>LUCHAN Пилипа Орлика, Ківерці</h3>
+                <p><strong>Дохід:</strong> 3,523,719.34 грн</p>
+                <p><strong>Транзакції:</strong> 14439</p>
+                <p><strong>Середній чек:</strong> 244.04 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 5.0%"></div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <h3>LUCHAN Поліклініка</h3>
+                <p><strong>Дохід:</strong> 2,423,287.55 грн</p>
+                <p><strong>Транзакції:</strong> 21045</p>
+                <p><strong>Середній чек:</strong> 115.15 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 3.4%"></div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <h3>LUCHAN Соборності, 6</h3>
+                <p><strong>Дохід:</strong> 8,074,264.85 грн</p>
+                <p><strong>Транзакції:</strong> 59172</p>
+                <p><strong>Середній чек:</strong> 136.45 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 11.4%"></div>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <h3>LUCHAN Ярослава Мудрого</h3>
+                <p><strong>Дохід:</strong> 2,749,589.60 грн</p>
+                <p><strong>Транзакції:</strong> 31987</p>
+                <p><strong>Середній чек:</strong> 85.96 грн</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 3.9%"></div>
+                </div>
+            </div>
+            
+        </div>
+        
+
+        <!-- Топ продукти -->
+        
+        <div class="section">
+            <h2>🛍️ Топ продукти</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Продукт</th>
+                        <th>Продажі (грн)</th>
+                        <th>Кількість</th>
+                        <th>Частка (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>Вітбір пшеничне 1 л.</td>
+                        <td>8,108,777.50</td>
+                        <td>126,508</td>
+                        <td>23.7%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Холодне сонце/ Пшеничне BLANC</td>
+                        <td>4,896,647.00</td>
+                        <td>70,995</td>
+                        <td>14.3%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Пиво Лучан2020 </td>
+                        <td>4,357,137.00</td>
+                        <td>66,136</td>
+                        <td>12.7%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Німецький Пілс 1 л.</td>
+                        <td>4,026,915.00</td>
+                        <td>62,928</td>
+                        <td>11.8%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Квас</td>
+                        <td>2,980,635.00</td>
+                        <td>105,800</td>
+                        <td>8.7%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Вітбір 2л.</td>
+                        <td>2,472,320.00</td>
+                        <td>19,760</td>
+                        <td>7.2%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Сиров'ялена продукція</td>
+                        <td>2,433,845.96</td>
+                        <td>2,654,353</td>
+                        <td>7.1%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Пиво Пшеничне темне фірмове</td>
+                        <td>2,005,686.00</td>
+                        <td>31,091</td>
+                        <td>5.9%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Пиво Баварське напівтемне </td>
+                        <td>1,531,926.00</td>
+                        <td>23,685</td>
+                        <td>4.5%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Американський світлий ель 1 л.</td>
+                        <td>1,391,102.00</td>
+                        <td>17,448</td>
+                        <td>4.1%</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+
+        <!-- Аналіз клієнтів -->
+        
+        <div class="section">
+            <h2>👥 Аналіз клієнтів</h2>
+            <div class="insight">
+                <strong>💡 Ключові інсайти:</strong>
+                <ul>
+                    
+                    <li>Загальна кількість клієнтів: 18,135</li>
+                    
+                    <li>Середня кількість покупок на клієнта: 28.7</li>
+                    
+                    <li>Топ 10 клієнтів генерують 1,139,252.53 грн доходу</li>
+                    
+                </ul>
+            </div>
+
+            
+            <h3>🌟 Топ клієнти</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Клієнт</th>
+                        <th>Витрачено (грн)</th>
+                        <th>Транзакції</th>
+                        <th>Середній чек</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>Валентин Попович</td>
+                        <td>368,009.75</td>
+                        <td>651</td>
+                        <td>565.30</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Микола Литвак</td>
+                        <td>122,612.45</td>
+                        <td>809</td>
+                        <td>151.56</td>
+                    </tr>
+                    
+                    <tr>
+                        <td> Фасоля</td>
+                        <td>98,818.63</td>
+                        <td>245</td>
+                        <td>403.34</td>
+                    </tr>
+                    
+                    <tr>
+                        <td> кок</td>
+                        <td>94,906.07</td>
+                        <td>511</td>
+                        <td>185.73</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Юрій Мельник</td>
+                        <td>84,252.23</td>
+                        <td>639</td>
+                        <td>131.85</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Владислав Зайцев</td>
+                        <td>79,674.75</td>
+                        <td>547</td>
+                        <td>145.66</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Олександр Терешко</td>
+                        <td>76,255.43</td>
+                        <td>268</td>
+                        <td>284.54</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Іван Москалик</td>
+                        <td>73,462.34</td>
+                        <td>123</td>
+                        <td>597.25</td>
+                    </tr>
+                    
+                    <tr>
+                        <td> Володимир</td>
+                        <td>71,335.77</td>
+                        <td>41</td>
+                        <td>1739.90</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Ірина Лукашук</td>
+                        <td>69,925.11</td>
+                        <td>274</td>
+                        <td>255.20</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+            
+        </div>
+        
+
+        <!-- Тренди -->
+        
+
+        <!-- Аналіз бонусної системи -->
+        
+        <div class="section">
+            <h2>🎁 Аналіз бонусної системи</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon">💰</div>
+                    <div class="value">1,854,557.38 грн</div>
+                    <div class="label">Загальна сума бонусів</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">🎯</div>
+                    <div class="value">297,217</div>
+                    <div class="label">Транзакцій з бонусами</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">📊</div>
+                    <div class="value">3.60%</div>
+                    <div class="label">Середній % бонусу</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">⭐</div>
+                    <div class="value">4.00%</div>
+                    <div class="label">Максимальний % бонусу</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon">💵</div>
+                    <div class="value">6.24 грн</div>
+                    <div class="label">Середня сума бонусу</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">🔥</div>
+                    <div class="value">186.36 грн</div>
+                    <div class="label">Максимальна сума бонусу</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">📋</div>
+                    <div class="value">57.1%</div>
+                    <div class="label">% транзакцій з бонусами</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">🛒</div>
+                    <div class="value">173.16 грн</div>
+                    <div class="label">Середній чек з бонусами</div>
+                </div>
+            </div>
+
+            <div class="insight">
+                <strong>💡 Ключові інсайти:</strong>
+                <ul>
+                    
+                    <li>Загальна сума нарахованих бонусів: 1,854,557.38 грн</li>
+                    
+                    <li>Бонуси отримали 297,217 транзакцій (57.1%)</li>
+                    
+                    <li>Середній відсоток бонусу: 3.60% від суми покупки</li>
+                    
+                    <li>Середня сума бонусу за транзакцію: 6.24 грн</li>
+                    
+                    <li>Максимальний бонус за транзакцію: 186.36 грн (при 4.00%)</li>
+                    
+                    <li>Середня сума транзакцій з бонусами: 173.16 грн</li>
+                    
+                </ul>
+            </div>
+        </div>
+        
+
+        <!-- Тренди продажів по місяцях -->
+        
+        <div class="section">
+            <h2>📈 Тренди продажів по місяцях</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Період</th>
+                        <th>Місяць</th>
+                        <th>Дохід (грн)</th>
+                        <th>Транзакції</th>
+                        <th>Середній чек</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>2025-03</td>
+                        <td>Березень</td>
+                        <td>7,135,146.57</td>
+                        <td>48,928</td>
+                        <td>145.83 грн</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>2025-04</td>
+                        <td>Квітень</td>
+                        <td>8,753,559.92</td>
+                        <td>63,072</td>
+                        <td>138.79 грн</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>2025-05</td>
+                        <td>Травень</td>
+                        <td>10,895,473.95</td>
+                        <td>75,500</td>
+                        <td>144.31 грн</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>2025-06</td>
+                        <td>Червень</td>
+                        <td>14,307,165.06</td>
+                        <td>109,147</td>
+                        <td>131.08 грн</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>2025-07</td>
+                        <td>Липень</td>
+                        <td>14,992,636.57</td>
+                        <td>113,738</td>
+                        <td>131.82 грн</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>2025-08</td>
+                        <td>Серпень</td>
+                        <td>15,168,855.75</td>
+                        <td>109,938</td>
+                        <td>137.98 грн</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+
+        <!-- Комплексна статистика -->
+        
+        <div class="section">
+            <h2>📋 Комплексна статистика</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon">🛍️</div>
+                    <div class="value">273</div>
+                    <div class="label">Унікальних продуктів</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">🏪</div>
+                    <div class="value">14</div>
+                    <div class="label">Точок продажу</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">🔝</div>
+                    <div class="value">7,551.09 грн</div>
+                    <div class="label">Найбільша транзакція</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">🛒</div>
+                    <div class="value">2.0</div>
+                    <div class="label">Середньо товарів в чеку</div>
+                </div>
+            </div>
+            <div class="insight">
+                <strong>💡 Додаткові інсайти:</strong>
+                <ul>
+                    
+                    <li>У системі зареєстровано 273 унікальних продуктів</li>
+                    
+                    <li>Працює 14 точок продажу</li>
+                    
+                    <li>Найбільша транзакція: 7,551.09 грн</li>
+                    
+                    <li>Найменша транзакція: 0.01 грн</li>
+                    
+                    <li>У середньому 2.0 товарів в чеку</li>
+                    
+                </ul>
+            </div>
+        </div>
+        
+
+        <!-- Детальний аналіз продуктів по категоріях -->
+        
+        <div class="section">
+            <h2>🏷️ Аналіз продуктів по категоріях</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Категорія</th>
+                        <th>Продажі (грн)</th>
+                        <th>Кількість</th>
+                        <th>Унікальних продуктів</th>
+                        <th>Частка (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>Пиво "Luchan" Вітбір</td>
+                        <td>11,681,205.50</td>
+                        <td>180,960</td>
+                        <td>4</td>
+                        <td>19.2%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Мясні Делікатеси.</td>
+                        <td>8,172,984.63</td>
+                        <td>8,491,832</td>
+                        <td>38</td>
+                        <td>13.4%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Пиво Luchan</td>
+                        <td>6,764,020.00</td>
+                        <td>94,564</td>
+                        <td>9</td>
+                        <td>11.1%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Безалкогольні Напої " Luchan"</td>
+                        <td>6,558,550.00</td>
+                        <td>238,879</td>
+                        <td>15</td>
+                        <td>10.8%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Пиво "Luchan" Німецький Пілс</td>
+                        <td>5,810,283.00</td>
+                        <td>99,636</td>
+                        <td>4</td>
+                        <td>9.6%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Пиво "Luchan" Пиво Лучан2020</td>
+                        <td>4,358,620.00</td>
+                        <td>66,161</td>
+                        <td>1</td>
+                        <td>7.2%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Снеки</td>
+                        <td>2,974,408.00</td>
+                        <td>78,231</td>
+                        <td>22</td>
+                        <td>4.9%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Риба </td>
+                        <td>2,408,207.04</td>
+                        <td>3,424,324</td>
+                        <td>6</td>
+                        <td>4.0%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>В'ялена риба</td>
+                        <td>2,063,879.03</td>
+                        <td>2,970,441</td>
+                        <td>9</td>
+                        <td>3.4%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Пиво "Luchan" Пшеничне темне фірмове</td>
+                        <td>2,005,946.00</td>
+                        <td>31,095</td>
+                        <td>1</td>
+                        <td>3.3%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Пиво "Luchan" Американський світлий ель.</td>
+                        <td>1,852,520.00</td>
+                        <td>26,220</td>
+                        <td>4</td>
+                        <td>3.0%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Сирна Продукція</td>
+                        <td>1,683,641.20</td>
+                        <td>3,060,538</td>
+                        <td>4</td>
+                        <td>2.8%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Риба гарячого копчення</td>
+                        <td>1,605,216.90</td>
+                        <td>2,476,882</td>
+                        <td>3</td>
+                        <td>2.6%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Пиво "Luchan" Баварське напівтемне</td>
+                        <td>1,534,716.00</td>
+                        <td>23,728</td>
+                        <td>1</td>
+                        <td>2.5%</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>    Пиво "Luchan" Голден Ель</td>
+                        <td>1,337,903.00</td>
+                        <td>20,876</td>
+                        <td>4</td>
+                        <td>2.2%</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+        
+
+        <!-- Рекомендації -->
+        
+        <div class="section">
+            <h2>💡 Рекомендації</h2>
+            
+            <div class="insight">
+                <strong>🎯 Фокус на топ продуктах:</strong> Збільшити промо активність для найпопулярніших товарів
+            </div>
+            
+            <div class="insight">
+                <strong>👥 Програма лояльності:</strong> Розробити спеціальні пропозиції для топ клієнтів
+            </div>
+            
+            <div class="insight">
+                <strong>📊 Оптимізація точок:</strong> Проаналізувати ефективність менш прибуткових точок
+            </div>
+            
+            <div class="insight">
+                <strong>🚀 Автоматизація:</strong> Впровадити автоматичні звіти для моніторингу трендів
+            </div>
+            
+        </div>
+        
+
+        <div class="footer">
+            <p>🚀 Згенеровано системою аналізу Avocado API</p>
+            <p>01.09.2025 10:50</p>
+        </div>
+    </div>
+
+    <script>
+        // Додаємо анімації при завантаженні
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.stat-card, .section');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>
+        

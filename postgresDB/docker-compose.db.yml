@@ -1,0 +1,74 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: avocado_postgres
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-avocado_db}
+      POSTGRES_USER: ${POSTGRES_USER:-avocado_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-avocado_pass}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+    networks:
+      - avocado_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-avocado_user} -d ${POSTGRES_DB:-avocado_db}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: >
+      postgres -c log_statement=all
+               -c log_destination=stderr
+               -c log_min_messages=info
+               -c shared_preload_libraries=''
+
+  redis:
+    image: redis:7-alpine
+    container_name: avocado_redis
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - avocado_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  adminer:
+    image: adminer:latest
+    container_name: avocado_adminer
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    networks:
+      - avocado_network
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: "lucas"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pg_data:
+  redis_data:
+
+networks:
+  avocado_network:
+    driver: bridge

@@ -13,6 +13,7 @@ from src.config import settings
 from src.config.constants import API_VERSION_PREFIX
 from src.core.database.connection import init_db
 from src.core.exceptions.handlers import add_exception_handlers
+from src.config.redis import get_redis_client
 
 # Імпортуємо middleware для логування з правильного місця
 from src.core.models.logging.middleware import OptimizedRequestLoggingMiddleware
@@ -46,6 +47,10 @@ async def lifespan(app: FastAPI):
 
     # Ініціалізація бази даних
     db_session = await init_db()
+
+    # Ініціалізація Redis та збереження в app.state
+    redis_client = get_redis_client()
+    app.state.redis = redis_client
 
     # Перевірка наявності нових міграцій
     if has_pending_migrations():
@@ -96,6 +101,10 @@ async def lifespan(app: FastAPI):
             sync_db_session.close()
         except:
             pass
+
+    # Закриття Redis (якщо потрібно)
+    if hasattr(redis_client, 'close'):
+        redis_client.close()
 
 
 def create_app() -> FastAPI:

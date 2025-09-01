@@ -2,8 +2,6 @@
 Product model for catalog management.
 """
 
-
-
 from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import relationship
@@ -26,6 +24,7 @@ class Product(BaseModel):
     is_active = Column(Boolean, default=True, nullable=False)
     stock_quantity = Column(Integer, default=0, nullable=False)
     min_stock_quantity = Column(Integer, default=0, nullable=True)
+    image_url = Column(String, nullable=True, comment="Посилання на зображення в S3")
 
     # Foreign keys
     category_id = Column(

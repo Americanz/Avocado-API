@@ -2,7 +2,7 @@
 Controller for category management.
 """
 
-from typing import Dict, List, Optional, Tuple, Any
+from typing import  List, Optional, Tuple
 from uuid import UUID
 
 from sqlalchemy import select, func, or_, and_

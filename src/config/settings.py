@@ -3,8 +3,9 @@ Application settings module.
 """
 
 import os
+import re
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from dotenv import load_dotenv
 from pydantic import model_validator, Field
@@ -12,6 +13,21 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Завантаження змінних середовища з .env файлу
 load_dotenv()
+
+# Функція для розширення змінних у форматі ${VARIABLE}
+def expand_vars(value: str) -> str:
+    """Розширює змінні у форматі ${VARIABLE} або $VARIABLE."""
+    if not isinstance(value, str):
+        return value
+    
+    # Розширюємо змінні у форматі ${VARIABLE}
+    def replace_var(match):
+        var_name = match.group(1)
+        return os.getenv(var_name, match.group(0))  # Повертаємо оригінал, якщо змінна не знайдена
+    
+    # Шаблон для ${VARIABLE}
+    pattern = r'\$\{([^}]+)\}'
+    return re.sub(pattern, replace_var, value)
 
 # Визначення базових шляхів проекту
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -44,12 +60,18 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")
 
     # Налаштування бази даних
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./database.db")
-    ASYNC_DATABASE_URL: Optional[str] = os.getenv("ASYNC_DATABASE_URL", None)
+    DATABASE_URL: str = expand_vars(os.getenv("DATABASE_URL", "sqlite:///./database.db"))
+    ASYNC_DATABASE_URL: Optional[str] = expand_vars(os.getenv("ASYNC_DATABASE_URL", "")) if os.getenv("ASYNC_DATABASE_URL") else None
     USE_SQLITE: bool = os.getenv("USE_SQLITE", "True").lower() in ["true", "1"]
     SQLITE_DB_PATH: str = os.getenv("SQLITE_DB_PATH", "sqlite:///./database.db")
     TEST_SQLITE_DB_PATH: str = os.getenv("TEST_SQLITE_DB_PATH", "sqlite:///./test.db")
     RESET_DB: bool = os.getenv("RESET_DB", "False").lower() in ["true", "1"]
+
+    # Налаштування Redis
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
+    REDIS_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD", None)
 
     # Налаштування безпеки
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here")
@@ -142,6 +164,20 @@ class Settings(BaseSettings):
     LOG_SANITIZE_SENSITIVE_DATA: bool = os.getenv(
         "LOG_SANITIZE_SENSITIVE_DATA", "True"
     ).lower() in ["true", "1"]
+
+    # Poster API integration settings
+    POSTER_API_TOKEN: Optional[str] = os.getenv("POSTER_API_TOKEN", None)
+    POSTER_ACCOUNT_NAME: Optional[str] = os.getenv("POSTER_ACCOUNT_NAME", None)
+    POSTER_SYNC_INTERVAL_MINUTES: int = int(
+        os.getenv("POSTER_SYNC_INTERVAL_MINUTES", "60")
+    )
+    POSTER_ENABLE_AUTO_SYNC: bool = os.getenv(
+        "POSTER_ENABLE_AUTO_SYNC", "False"
+    ).lower() in ["true", "1"]
+    POSTER_BONUS_RATE: float = float(
+        os.getenv("POSTER_BONUS_RATE", "0.05")
+    )  # 5% default bonus rate
+    
     LOG_FILE_ROTATION: str = os.getenv("LOG_FILE_ROTATION", "10 MB")
     LOG_FILE_RETENTION: int = int(os.getenv("LOG_FILE_RETENTION", "5"))
     LOG_MAX_FILE_SIZE: int = int(os.getenv("LOG_MAX_FILE_SIZE", "10"))  # MB
