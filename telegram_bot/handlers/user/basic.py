@@ -8,7 +8,7 @@ from telegram_bot.services import *
 from telegram_bot.utils import *
 from telegram_bot.data import *
 
-from telegram_bot.handlers.common.dispatcher import dispatch_button_handler
+from telegram_bot.handlers.common.dispatcher import dispatch_button_handler, dispatch_callback_handler
 from telegram_bot.handlers.common.permissions import is_admin
 from aiogram.utils.markdown import hbold
 from telegram_bot.data.keyboards import get_keyboard
@@ -88,19 +88,14 @@ def register_user_handlers(dp, menu_manager=None):
 
         # Основне меню для зареєстрованих користувачів
         from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+        from telegram_bot.keyboards.builder import build_main_keyboard
 
         is_admin_user = is_admin(user_id)
-        keyboard_buttons = []
-        for btn in get_keyboard("main"):
-            if btn["enabled"]:
-                keyboard_buttons.append([KeyboardButton(text=btn["text"])])
-
-        if is_admin_user:
-            for btn in get_keyboard("admin"):
-                if btn["enabled"]:
-                    keyboard_buttons.append([KeyboardButton(text=btn["text"])])
-
-        keyboard = ReplyKeyboardMarkup(keyboard=keyboard_buttons, resize_keyboard=True)
+        main_buttons = get_keyboard("main")
+        admin_buttons = get_keyboard("admin") if is_admin_user else []
+        
+        # Передаємо phone для приховування кнопки "Поділитись номером" якщо номер вже є
+        keyboard = build_main_keyboard(main_buttons, admin_buttons, is_admin_user, phone)
 
         # Використовуємо простий текст замість "welcome_registered" для уникнення плутанини
         welcome_text = get_text("welcome") or f"Головне меню"
@@ -204,3 +199,19 @@ def register_user_handlers(dp, menu_manager=None):
 ```"""
 
         await message.answer(response, parse_mode="Markdown")
+
+    # Обробник callback query для inline кнопок
+    @dp.callback_query()
+    async def callback_handler(callback_query):
+        """Обробка callback query від inline кнопок"""
+        logger.info(f"Callback query від {callback_query.from_user.id}: {callback_query.data}")
+        
+        try:
+            # Використовуємо dispatcher для обробки callback
+            await dispatch_callback_handler(callback_query.data, callback_query)
+        except ValueError as e:
+            logger.warning(f"Невідомий callback: {callback_query.data}")
+            await callback_query.answer("❌ Невідома команда", show_alert=True)
+        except Exception as e:
+            logger.error(f"Помилка в callback handler: {e}")
+            await callback_query.answer("❌ Сталася помилка", show_alert=True)

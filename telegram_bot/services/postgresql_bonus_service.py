@@ -619,6 +619,51 @@ class PostgreSQLBonusService(AbstractBonusService):
             self.logger.error(f"Помилка отримання списку користувачів: {e}")
             return []
 
+    async def admin_users(self, limit: int = 10) -> List[Dict]:
+        """Отримати список користувачів для адмін-панелі"""
+        try:
+            with self.engine.connect() as conn:
+                results = conn.execute(
+                    text("""
+                        SELECT client_id, firstname, lastname, patronymic, phone, bonus, 
+                               created_at, telegram_user_id, telegram_username, 
+                               telegram_first_name, telegram_last_name
+                        FROM clients 
+                        WHERE telegram_user_id IS NOT NULL
+                        ORDER BY telegram_last_activity DESC NULLS LAST, created_at DESC
+                        LIMIT :limit
+                    """),
+                    {"limit": limit}
+                ).fetchall()
+                
+                users = []
+                for result in results:
+                    name_parts = []
+                    if result[1]:  # firstname
+                        name_parts.append(result[1])
+                    if result[2]:  # lastname  
+                        name_parts.append(result[2])
+                    if result[3]:  # patronymic
+                        name_parts.append(result[3])
+                    
+                    full_name = " ".join(name_parts) if name_parts else "Не вказано"
+                    
+                    users.append({
+                        "client_id": result[0],
+                        "name": full_name,
+                        "phone": result[4],
+                        "bonus": result[5],
+                        "created_at": result[6],
+                        "telegram_user_id": result[7],
+                        "telegram_username": result[8],
+                        "telegram_first_name": result[9],
+                        "telegram_last_name": result[10]
+                    })
+                return users
+        except Exception as e:
+            self.logger.error(f"Помилка отримання користувачів для адміна: {e}")
+            return []
+
     def table_exists(self, table_name: str) -> bool:
         """Перевірити чи існує таблиця"""
         try:

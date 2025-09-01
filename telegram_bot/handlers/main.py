@@ -2,22 +2,16 @@
 Головний файл для керування всіма обробниками
 """
 
+import logging
+from aiogram import F
+from aiogram.types import Message
+
 from telegram_bot.handlers.user.basic import register_user_handlers
 from telegram_bot.handlers.common.dispatcher import button_handlers
 
 
-# Старі імпорти для сумісності
-from telegram_bot.handlers.common.balance import *
-from telegram_bot.handlers.common.history import *
-from telegram_bot.handlers.common.admin import *
-from telegram_bot.handlers.common.bonus import *
-from telegram_bot.handlers.common.share_phone import *
-
-
 def register_all_handlers(dp, menu_manager=None):
     """Реєстрація всіх обробників"""
-    import logging
-
     logger = logging.getLogger("telegram_bot.handlers")
 
     # Основні обробники користувача
@@ -28,8 +22,11 @@ def register_all_handlers(dp, menu_manager=None):
 
     register_bonus_commands(dp)
 
+    # Імпортуємо хендлери кнопок для їх реєстрації (через декоратори)
+    from telegram_bot.handlers.common import balance, history, admin, bonus, share_phone
+
     # Логування зареєстрованих button handlers
-    logger.info(f"Зареєстровано button handlers: {list(button_handlers.keys())}")
+    logger.info("Зареєстровано button handlers: %s", list(button_handlers.keys()))
 
     # Реєстрація button handlers з navigation system
     from telegram_bot.navigation.decorators import get_button_handlers
@@ -43,10 +40,8 @@ def register_all_handlers(dp, menu_manager=None):
 
 def register_handlers(dp):
     """Стара функція для сумісності"""
-    # Реєстрація хендлерів для кнопок
-    from aiogram import F
-    from aiogram.types import Message
 
+    # Реєстрація хендлерів для кнопок
     async def button_router(message: Message):
         # Try using the navigation system first
         menu_manager = dp.get("menu_manager")
@@ -55,16 +50,16 @@ def register_handlers(dp):
             if handled:
                 return
 
-        # Fallback to old handler system
-        handler_name = message.text.strip()
-        if handler_name in button_handlers:
-            try:
-                await button_handlers[handler_name](message)
-            except Exception as e:
-                import logging
+        # Fall back to legacy system if not handled by navigation
+        text = message.text
+        if text:
+            handler_name = text.strip()
+            handler = button_handlers.get(handler_name)
+            if handler:
+                try:
+                    await handler(message)
+                except Exception as e:
+                    logger = logging.getLogger("telegram_bot.handlers.button_router")
+                    logger.error("Error in button handler %s: %s", handler_name, e)
 
-                logger = logging.getLogger("telegram_bot")
-                logger.error(f"Error in button handler {handler_name}: {e}")
-
-    # Register the button router
-    dp.message.register(button_router, F.text)
+    dp.message(F.text)(button_router)  # Route all text messages

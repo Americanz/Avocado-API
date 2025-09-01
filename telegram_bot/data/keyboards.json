@@ -11,11 +11,6 @@
             "handler": "show_history"
         },
         {
-            "text": "🛍️ Каталог товарів",
-            "enabled": true,
-            "handler": "show_products"
-        },
-        {
             "text": "Поділитись номером",
             "enabled": true,
             "handler": "share_phone"
@@ -46,11 +41,6 @@
             "text": "Керування користувачами",
             "enabled": true,
             "handler": "admin_users"
-        },
-        {
-            "text": "🏪 Синхронізація Poster",
-            "enabled": true,
-            "handler": "poster_sync"
         },
         {
             "text": "⬅️ Назад",

@@ -14,8 +14,8 @@ async def show_balance(message: Message):
         balance = await bonus_service.get_user_balance(user_id)
         from telegram_bot.data.bot_texts import get_text
 
-        if balance == 0:
-            text = get_text("balance_zero") or "У вас поки що немає бонусів."
+        if balance is None or balance == 0:
+            text = get_text("balance_zero") or "😅 На жаль, у вас поки що немає бонусів. Але все попереду!"
             await message.answer(text)
         else:
             text = (

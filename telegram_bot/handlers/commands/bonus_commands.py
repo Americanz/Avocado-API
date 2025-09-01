@@ -3,8 +3,6 @@
 """
 
 import logging
-import re
-from aiogram import types
 from aiogram.types import Message
 from aiogram.filters import Command
 from telegram_bot.services.bonus_service_universal import get_bonus_service
